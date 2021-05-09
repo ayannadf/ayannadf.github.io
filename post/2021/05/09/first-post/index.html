@@ -75,7 +75,20 @@
 <div id="introduction-to-python-for-computational-biology" class="section level1">
 <h1>Introduction to Python for Computational Biology</h1>
 <p>In Computational Biology we briefly learned about Python and how it works alongside the programming language R.
-R is a great programming language because its functions are formatted so that data can be easily manipulated, analyzed, and visualized. Python has a useful library that imitates many essential features in R called Pandas. Below are some examples of code to demonstrate the similarities between the two popular languages.</p>
+R is a great programming language because its functions are formatted so that data can be easily manipulated, analyzed, and visualized. Python has a useful library that imitates many essential features in R called Pandas. Since the two languages are widely used in the fields of statistical analysis, many programmers utilize both for projects. As such, it is essential to be able to communicate between the two.</p>
+<div id="reticulate-package" class="section level2">
+<h2>Reticulate Package</h2>
+<p>Reticulate is a package in R that includes a Python engine for R Markdown, so programmers can code Python chunks alongside R chunks. Below is a simple example of an R chunk and Python chunk and how they can be integrated to construct a final product.</p>
+<pre class="r"><code># R chunk
+library(reticulate)
+
+intro &lt;- &quot;Hey there, I hope your day is&quot;</code></pre>
+<pre class="python"><code># Python chunk
+intro = &quot;amazing!!&quot;
+# r. is used to access R-defined objects
+print(r.intro, intro)</code></pre>
+<pre><code>## Hey there, I hope your day is amazing!!</code></pre>
+</div>
 </div>
 
             

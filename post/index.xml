@@ -13,7 +13,7 @@
       <pubDate>Sun, 09 May 2021 00:00:00 +0000</pubDate>
       
       <guid>/post/2021/05/09/first-post/</guid>
-      <description>Introduction to Python for Computational Biology In Computational Biology we briefly learned about Python and how it works alongside the programming language R. R is a great programming language because its functions are formatted so that data can be easily manipulated, analyzed, and visualized. Python has a useful library that imitates many essential features in R called Pandas. Below are some examples of code to demonstrate the similarities between the two popular languages.</description>
+      <description>Introduction to Python for Computational Biology In Computational Biology we briefly learned about Python and how it works alongside the programming language R. R is a great programming language because its functions are formatted so that data can be easily manipulated, analyzed, and visualized. Python has a useful library that imitates many essential features in R called Pandas. Since the two languages are widely used in the fields of statistical analysis, many programmers utilize both for projects.</description>
     </item>
     
   </channel>
