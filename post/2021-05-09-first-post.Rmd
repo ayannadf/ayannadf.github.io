@@ -14,7 +14,7 @@ R is a great programming language because its functions are formatted so that da
 
 ### Reticulate Package
 
-Reticulate is a package in R that includes a Python engine for R Markdown, so programmers can code Python chunks alongside R chunks. Below is a simple example of an R chunk and Python chunk and how they can be integrated to construct a final product.
+Reticulate is a package in R that includes a Python engine for R Markdown, so programmers can code Python chunks alongside R chunks. Below is a simple example of an R code chunk and Python code chunk and how they can be integrated to construct a final product.
 
 ``` {R}
 # R chunk
@@ -26,6 +26,7 @@ intro <- "Hey there, I hope your day is"
 ```{python}
 # Python chunk
 intro = "amazing!!"
+
 # r. is used to access R-defined objects
 print(r.intro, intro)
 ```

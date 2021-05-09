@@ -78,13 +78,14 @@
 R is a great programming language because its functions are formatted so that data can be easily manipulated, analyzed, and visualized. Python has a useful library that imitates many essential features in R called Pandas. Since the two languages are widely used in the fields of statistical analysis, many programmers utilize both for projects. As such, it is important to be able to communicate between the two.</p>
 <div id="reticulate-package" class="section level3">
 <h3>Reticulate Package</h3>
-<p>Reticulate is a package in R that includes a Python engine for R Markdown, so programmers can code Python chunks alongside R chunks. Below is a simple example of an R chunk and Python chunk and how they can be integrated to construct a final product.</p>
+<p>Reticulate is a package in R that includes a Python engine for R Markdown, so programmers can code Python chunks alongside R chunks. Below is a simple example of an R code chunk and Python code chunk and how they can be integrated to construct a final product.</p>
 <pre class="r"><code># R chunk
 library(reticulate)
 
 intro &lt;- &quot;Hey there, I hope your day is&quot;</code></pre>
 <pre class="python"><code># Python chunk
 intro = &quot;amazing!!&quot;
+
 # r. is used to access R-defined objects
 print(r.intro, intro)</code></pre>
 <pre><code>## Hey there, I hope your day is amazing!!</code></pre>
