@@ -60,7 +60,7 @@
  
 <div class="blog-title">
           <h4>
-         January 1, 0001 
+         May 7, 2021 
             &nbsp;&nbsp;
             
           </h4>
@@ -654,10 +654,10 @@ samp_distn &lt;- replicate(5000, {
 })
 # estimated standard errors (sampling rows)
 samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
-<pre><code>##   (Intercept)    Reviews_c TypePaid       Size_c Reviews_c:TypePaid
-## 1 0.006659989 8.192575e-09 0.148554 7.588658e-05       9.284182e-07
+<pre><code>##   (Intercept)    Reviews_c  TypePaid       Size_c Reviews_c:TypePaid
+## 1  0.00668485 8.266362e-09 0.1440414 7.735318e-05       8.976725e-07
 ##   Reviews_c:Size_c TypePaid:Size_c Reviews_c:TypePaid:Size_c
-## 1     1.559107e-10      0.00297304              1.793168e-08</code></pre>
+## 1     1.580926e-10     0.002870806              1.732393e-08</code></pre>
 <p><font size="3.5"> When the standard errors are bootstrapped, the rows are resampled. Although they are all differ within a 0.1 difference, the standard errors that increased due to bootstrapping were: Reviews (mean centered), Size (mean centered), and interaction between Reviews_c:TypePaid. If the bootstrap standard errors were used, these variables and interactions would have a lower p-value and a higher chance at rejecting the null hypothesis. </font>
 <br></p>
 <p><strong>LOGISTIC REGRESSION WITH BINARY VARIABLE</strong></p>

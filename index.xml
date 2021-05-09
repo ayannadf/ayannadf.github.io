@@ -17,25 +17,25 @@
     </item>
     
     <item>
-      <title>Project 1: Exploratory Data Analysis</title>
-      <link>/project/project1/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/project/project1/</guid>
-      <description>NAME: Ayanna Fisher EID: adf2353 DUE: 04/04/2021
-
-INTRODUCTION For this project I wanted to see if there was a relationship between the condition of roads/infrastructure of each state and their corresponding GDP status for each year. The infrastructure data frame used in this assignment comes from the U.S. Bureau of Transportation Statistics –&amp;gt; https://www.bts.gov/road-condition . It originally had 5 columns, listing the state, international roughness index, class, year, and total miles.</description>
-    </item>
-    
-    <item>
       <title>Project 2: Modeling, Testing, and Predicting</title>
       <link>/project/project2/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <pubDate>Fri, 07 May 2021 00:00:00 +0000</pubDate>
       
       <guid>/project/project2/</guid>
       <description>NAME: Ayanna Fisher EID: adf2353 DUE: 05/07/2021
 Introduction 
 This dataset details Google Play Store apps and their corresponding qualities. With 10,841 observations, there are 13 variables, App, Category, Rating, Reviews, Size, Installs, Type, Price, Content Rating, Genres, Last Updated, Current Version, and Android Version. Of the 13 variables, this project will focus on variables Category, Rating, Reviews, Size, and Type. After tidying the dataset and omitting any NA values, there will be a total of 7,088 observations to manipulate in this project.</description>
+    </item>
+    
+    <item>
+      <title>Project 1: Exploratory Data Analysis</title>
+      <link>/project/project1/</link>
+      <pubDate>Sun, 04 Apr 2021 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>NAME: Ayanna Fisher EID: adf2353 DUE: 04/04/2021
+
+INTRODUCTION For this project I wanted to see if there was a relationship between the condition of roads/infrastructure of each state and their corresponding GDP status for each year. The infrastructure data frame used in this assignment comes from the U.S. Bureau of Transportation Statistics –&amp;gt; https://www.bts.gov/road-condition . It originally had 5 columns, listing the state, international roughness index, class, year, and total miles.</description>
     </item>
     
     <item>
