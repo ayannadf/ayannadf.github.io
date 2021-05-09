@@ -444,7 +444,7 @@ for (i in 1:5000) {
 # *************************************************************FIX
 # SOMETHING IS WRONG HERE
 mean(rand_dist &gt; 0.0905 | rand_dist &lt; -0.0905)</code></pre>
-<pre><code>## [1] 2e-04</code></pre>
+<pre><code>## [1] 4e-04</code></pre>
 <pre class="r"><code># dist of response varia, ratings, for each each type number
 # of bins calculated from sqrt of number of obs (sqrt 8280 =
 # 90.91)
@@ -654,10 +654,10 @@ samp_distn &lt;- replicate(5000, {
 })
 # estimated standard errors (sampling rows)
 samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
-<pre><code>##   (Intercept)    Reviews_c  TypePaid       Size_c Reviews_c:TypePaid
-## 1 0.006768979 8.115732e-09 0.1428655 7.632998e-05       8.911081e-07
+<pre><code>##   (Intercept)    Reviews_c TypePaid       Size_c Reviews_c:TypePaid
+## 1 0.006818083 8.223173e-09 0.150074 7.643548e-05        9.31912e-07
 ##   Reviews_c:Size_c TypePaid:Size_c Reviews_c:TypePaid:Size_c
-## 1     1.561447e-10     0.002886606              1.741114e-08</code></pre>
+## 1     1.581481e-10     0.002987688              1.804038e-08</code></pre>
 <p><font size="3.5"> When the standard errors are bootstrapped, the rows are resampled. Although they are all differ within a 0.1 difference, the standard errors that increased due to bootstrapping were: Reviews (mean centered), Size (mean centered), and interaction between Reviews_c:TypePaid. If the bootstrap standard errors were used, these variables and interactions would have a lower p-value and a higher chance at rejecting the null hypothesis. </font>
 <br></p>
 <p><strong>LOGISTIC REGRESSION WITH BINARY VARIABLE</strong></p>
