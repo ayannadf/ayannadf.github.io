@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="author" content="Ayanna Denise Fisher" />
+    <meta name="author" content="Ayanna Fisher" />
     
     <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
     <title>Project 2: Modeling, Testing, and Predicting</title>
@@ -654,10 +654,10 @@ samp_distn &lt;- replicate(5000, {
 })
 # estimated standard errors (sampling rows)
 samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
-<pre><code>##   (Intercept)    Reviews_c  TypePaid       Size_c Reviews_c:TypePaid
-## 1 0.006701972 8.196839e-09 0.1444317 7.664418e-05       8.996696e-07
+<pre><code>##   (Intercept)    Reviews_c TypePaid       Size_c Reviews_c:TypePaid
+## 1 0.006659989 8.192575e-09 0.148554 7.588658e-05       9.284182e-07
 ##   Reviews_c:Size_c TypePaid:Size_c Reviews_c:TypePaid:Size_c
-## 1     1.594986e-10     0.002751434              1.664692e-08</code></pre>
+## 1     1.559107e-10      0.00297304              1.793168e-08</code></pre>
 <p><font size="3.5"> When the standard errors are bootstrapped, the rows are resampled. Although they are all differ within a 0.1 difference, the standard errors that increased due to bootstrapping were: Reviews (mean centered), Size (mean centered), and interaction between Reviews_c:TypePaid. If the bootstrap standard errors were used, these variables and interactions would have a lower p-value and a higher chance at rejecting the null hypothesis. </font>
 <br></p>
 <p><strong>LOGISTIC REGRESSION WITH BINARY VARIABLE</strong></p>
