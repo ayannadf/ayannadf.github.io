@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Ayanna Fisher" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 2: Modeling, Testing, and Predicting</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project2/">Project 2: Modeling, Testing, and Predicting</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+<script src="../../rmarkdown-libs/kePrint/kePrint.js"></script>
+<link href="../../rmarkdown-libs/lightable/lightable.css" rel="stylesheet" />
+
+
+<p>NAME: Ayanna Fisher
+EID: adf2353
+DUE: 05/07/2021</p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p><br>
+<font size="3.5">This dataset details Google Play Store apps and their corresponding qualities. With 10,841 observations, there are 13 variables, App, Category, Rating, Reviews, Size, Installs, Type, Price, Content Rating, Genres, Last Updated, Current Version, and Android Version. Of the 13 variables, this project will focus on variables Category, Rating, Reviews, Size, and Type. After tidying the dataset and omitting any NA values, there will be a total of 7,088 observations to manipulate in this project.</p>
+<p>Source: <a href="https://www.kaggle.com/lava18/google-play-store-apps" class="uri">https://www.kaggle.com/lava18/google-play-store-apps</a> </font></p>
+<p><br></p>
+<p><strong>TIDY DATASET</strong></p>
+<pre class="r"><code># required packages
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(kableExtra)
+library(ggplot2)
+library(sandwich)
+library(lmtest)
+library(pROC)
+library(plotROC)
+library(glmnet)
+library(rstatix)
+
+# untidy dataset
+ggl0 &lt;- read_csv(&quot;googleplaystore.csv&quot;)
+# remove unneeded varia and rows with NA values
+ggl1 &lt;- ggl0 %&gt;% select(1:8, 10:11) %&gt;% na.omit() %&gt;% mutate(ID = row_number())
+# remove $ from price obs final tidy dataset
+ggl2 &lt;- mutate(ggl1, Price = ifelse(grepl(&quot;$&quot;, Price), as.numeric(gsub(&quot;\\$&quot;, 
+    &quot;&quot;, Price))))
+# final tidy dataset
+ggl &lt;- ggl2 %&gt;% group_by(Category) %&gt;% filter(!duplicated(App)) %&gt;% 
+    filter(!grepl(&quot;Varies with device&quot;, Size)) %&gt;% select(11, 
+    2:5, 7)
+# remove M at end of Size values
+ggl$Size = gsub(&quot;.{1}$&quot;, &quot;&quot;, ggl$Size)
+# transform ch to numeric
+ggl &lt;- ggl %&gt;% mutate(Size = as.numeric(Size))
+ggl %&gt;% head() %&gt;% kbl(caption = &quot;**Tidy Google Play Store Dataset**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-1">Table 1: </span><strong>Tidy Google Play Store Dataset</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+ID
+</th>
+<th style="text-align:left;">
+Category
+</th>
+<th style="text-align:right;">
+Rating
+</th>
+<th style="text-align:right;">
+Reviews
+</th>
+<th style="text-align:right;">
+Size
+</th>
+<th style="text-align:left;">
+Type
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.1
+</td>
+<td style="text-align:right;">
+159
+</td>
+<td style="text-align:right;">
+19.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+3.9
+</td>
+<td style="text-align:right;">
+967
+</td>
+<td style="text-align:right;">
+14.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.7
+</td>
+<td style="text-align:right;">
+87510
+</td>
+<td style="text-align:right;">
+8.7
+</td>
+<td style="text-align:left;">
+Free
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.5
+</td>
+<td style="text-align:right;">
+215644
+</td>
+<td style="text-align:right;">
+25.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.3
+</td>
+<td style="text-align:right;">
+967
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+<td style="text-align:left;">
+Free
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.4
+</td>
+<td style="text-align:right;">
+167
+</td>
+<td style="text-align:right;">
+5.6
+</td>
+<td style="text-align:left;">
+Free
+</td>
+</tr>
+</tbody>
+</table>
+<p><strong>MANOVA</strong></p>
+<pre class="r"><code># means of each numeric variable are equal 1 MANOVA
+man1 &lt;- manova(cbind(Rating, Reviews, Size) ~ Type, data = ggl)
+summary(man1)</code></pre>
+<pre><code>##             Df    Pillai approx F num Df den Df   Pr(&gt;F)    
+## Type         1 0.0061065   14.508      3   7084 2.03e-09 ***
+## Residuals 7086                                              
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code># significant p-value --&gt; run univariate ANOVAs 3 ANOVAs
+summary.aov(man1)</code></pre>
+<pre><code>##  Response Rating :
+##               Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+## Type           1    4.11  4.1110  13.248 0.0002748 ***
+## Residuals   7086 2198.90  0.3103                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response Reviews :
+##               Df     Sum Sq    Mean Sq F value   Pr(&gt;F)   
+## Type           1 1.5355e+13 1.5355e+13  9.8839 0.001674 **
+## Residuals   7086 1.1009e+16 1.5536e+12                    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response Size :
+##               Df   Sum Sq Mean Sq F value    Pr(&gt;F)    
+## Type           1   160673  160673  17.118 3.554e-05 ***
+## Residuals   7086 66511479    9386                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>ggl %&gt;% group_by(Type) %&gt;% summarize(mean(Rating), mean(Reviews), 
+    mean(Size)) %&gt;% head() %&gt;% kbl(caption = &quot;**Tidy GDP**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-2">Table 2: </span><strong>Tidy GDP</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Type
+</th>
+<th style="text-align:right;">
+mean(Rating)
+</th>
+<th style="text-align:right;">
+mean(Reviews)
+</th>
+<th style="text-align:right;">
+mean(Size)
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+4.155676
+</td>
+<td style="text-align:right;">
+181899.60
+</td>
+<td style="text-align:right;">
+36.03947
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Paid
+</td>
+<td style="text-align:right;">
+4.246225
+</td>
+<td style="text-align:right;">
+6899.79
+</td>
+<td style="text-align:right;">
+53.94052
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># 3 t tests
+pairwise.t.test(ggl$Rating, ggl$Type, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  ggl$Rating and ggl$Type 
+## 
+##      Free   
+## Paid 0.00027
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(ggl$Reviews, ggl$Type, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  ggl$Reviews and ggl$Type 
+## 
+##      Free  
+## Paid 0.0017
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(ggl$Size, ggl$Type, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  ggl$Size and ggl$Type 
+## 
+##      Free   
+## Paid 3.6e-05
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code># P(&gt;= least 1 type I error) --&gt; 1 - P(No Type I errors)
+unadj_prob = 1 - (0.95^7)
+unadj_prob</code></pre>
+<pre><code>## [1] 0.3016627</code></pre>
+<pre class="r"><code># bonferroni adjustment alpha / num of tests
+adj_alpha = 0.05/7
+adj_alpha</code></pre>
+<pre><code>## [1] 0.007142857</code></pre>
+<pre class="r"><code># adjusted P(&gt;= least 1 type I error)
+adj_prob = 1 - ((1 - adj_alpha)^7)
+adj_prob</code></pre>
+<pre><code>## [1] 0.04894124</code></pre>
+<pre class="r"><code># adjusted signifcance threshold = 0.00714 everything is
+# STILL SIGNIFICANT</code></pre>
+<p><font size="3.5">The one-way MANOVA was conducted to determine the effect of the Type (Paid or Free) on 3 dependent variables (Rating, Reviews, and Size). Significant differences were found for the 2 Types for at least 1 of the dependent variables, Pillai trace = 0.006, pseudo F(3, 7,084) = 14.508, p-value &lt; 0.0001. Assumptions of multivariate normality and homogeneity of covariances supposed violated.
+Univariate ANOVAs for each of the dependent variables was conducted as follow-up tests to the MANOVA, using the Bonferroni method for controlling Type 1 error rates for multiple comparisons. The univariate ANOVAs for Rating, Reviews, and Size were also significant, F(1, 7,086) = 13.248, p-values &lt; 0.0001, F(1, 7086) = 9.884, p-value &lt; 0.001, F(1, 7,086) = 17.118, p-value &lt; 0.0001, respectfully.
+Post-hoc analysis was performed conducting pairwise comparisons to determine which Type differed in rating, reviews, and size. Both Types were found to differ significantly from each other in terms of these 3 dependent variables after adjusting for multiple comparisons (bonferroni α = 0.05/7 = 0.00714). If the significance level was left unadjusted, the probability of at least 1 Type I error occurring would be 30.16%. After adjustment, the chance would lower to 4.89%. </font></p>
+<p><br></p>
+<p><strong>RANDOMIZATION TEST</strong></p>
+<pre class="r"><code># categorical (Type) vs numeric (Rating) -&gt;&gt; mean difference
+# observed mean difference
+ggl %&gt;% group_by(Type) %&gt;% summarize(means = mean(Rating)) %&gt;% 
+    summarize(mean_diff = diff(means)) %&gt;% round(5) %&gt;% kbl(caption = &quot;**Observed Mean Difference**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-3">Table 3: </span><strong>Observed Mean Difference</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+mean_diff
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.09055
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># randomize to get a simulated test statistic (mean
+# difference) if the null hypothesis (no association between
+# Type) was true create vector to do this 5000 times
+rand_dist &lt;- vector()
+for (i in 1:5000) {
+    new &lt;- data.frame(Rating = sample(ggl$Rating), Type = ggl$Type)
+    rand_dist[i] &lt;- mean(new[new$Type == &quot;Paid&quot;, ]$Rating) - 
+        mean(new[new$Type == &quot;Free&quot;, ]$Rating)
+}
+
+{
+    hist(rand_dist, breaks = 91)
+    abline(v = c(0.0905, -0.0905), col = &quot;red&quot;)
+}</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># p value of rand_dist p &lt; alpha -&gt;&gt; reject the null
+# *************************************************************FIX
+# SOMETHING IS WRONG HERE
+mean(rand_dist &gt; 0.0905 | rand_dist &lt; -0.0905)</code></pre>
+<pre><code>## [1] 2e-04</code></pre>
+<pre class="r"><code># dist of response varia, ratings, for each each type number
+# of bins calculated from sqrt of number of obs (sqrt 8280 =
+# 90.91)
+ggplot(ggl, aes(Rating, fill = Type)) + geom_histogram(bins = 91) + 
+    facet_wrap(~Type) + theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" />
+<font size="3.5"> A randomization test was conducted to see whether there was a difference in mean rating between paid and free apps in the Google Play Store. Assumptions for the independent t-test were violated.
+-H0 : mean rating is the same for paid vs free apps
+-HA : mean rating is difference for paiv vs free apps
+Monte Carlo algorithm was used to compite a random subset of 5000 permutations to calculate a p-value of 0.0002, in which case we are safe to reject the null hypothesis that the mean rating is the same for paid vs free apps in the Google Play Store. </font></p>
+<p><br></p>
+<p><strong>LINEAR REGRESSION MODEL</strong></p>
+<pre class="r"><code># linear regression Rating from Reviews Type and Size
+fit1 &lt;- lm(Rating ~ Reviews + Type + Size, data = ggl)
+summary(fit1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Rating ~ Reviews + Type + Size, data = ggl)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.2539 -0.1598  0.1384  0.3461  0.9628 
+## 
+## Coefficients:
+##               Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  4.156e+00  7.349e-03 565.470  &lt; 2e-16 ***
+## Reviews      3.113e-08  5.297e-09   5.876 4.39e-09 ***
+## TypePaid     9.873e-02  2.486e-02   3.971 7.22e-05 ***
+## Size        -1.527e-04  6.815e-05  -2.241   0.0251 *  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.5556 on 7084 degrees of freedom
+## Multiple R-squared:  0.007316,   Adjusted R-squared:  0.006895 
+## F-statistic:  17.4 on 3 and 7084 DF,  p-value: 2.968e-11</code></pre>
+<pre class="r"><code># coef
+coef(fit1)</code></pre>
+<pre><code>##   (Intercept)       Reviews      TypePaid          Size 
+##  4.155518e+00  3.112780e-08  9.872990e-02 -1.527257e-04</code></pre>
+<pre class="r"><code># mean center numeric variable, Reviews, involved in
+# interaction
+ggl$Reviews_c &lt;- ggl$Reviews - mean(ggl$Reviews, na.rm = T)
+ggl$Size_c &lt;- ggl$Size - mean(ggl$Size, na.rm = T)
+
+# regress interaction of centered Reviews and Type
+fit2 &lt;- lm(Rating ~ Reviews_c * Type * Size_c, data = ggl)
+summary(fit2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Rating ~ Reviews_c * Type * Size_c, data = ggl)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.2389 -0.1757  0.1200  0.3487  0.9629 
+## 
+## Coefficients:
+##                             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                4.157e+00  6.880e-03 604.200  &lt; 2e-16 ***
+## Reviews_c                  6.106e-08  9.386e-09   6.506 8.25e-11 ***
+## TypePaid                   3.962e-01  1.334e-01   2.970 0.002992 ** 
+## Size_c                    -2.750e-04  7.991e-05  -3.441 0.000583 ***
+## Reviews_c:TypePaid         1.830e-06  8.114e-07   2.256 0.024107 *  
+## Reviews_c:Size_c          -7.500e-10  1.938e-10  -3.869 0.000110 ***
+## TypePaid:Size_c            2.331e-03  3.711e-03   0.628 0.530022    
+## Reviews_c:TypePaid:Size_c  1.368e-08  2.226e-08   0.614 0.538942    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.555 on 7080 degrees of freedom
+## Multiple R-squared:  0.01022,    Adjusted R-squared:  0.009242 
+## F-statistic: 10.44 on 7 and 7080 DF,  p-value: 4.079e-13</code></pre>
+<pre class="r"><code># interaction coef
+coef(fit2)</code></pre>
+<pre><code>##               (Intercept)                 Reviews_c                  TypePaid 
+##              4.157032e+00              6.106370e-08              3.962234e-01 
+##                    Size_c        Reviews_c:TypePaid          Reviews_c:Size_c 
+##             -2.749586e-04              1.830372e-06             -7.499899e-10 
+##           TypePaid:Size_c Reviews_c:TypePaid:Size_c 
+##              2.330784e-03              1.367888e-08</code></pre>
+<pre class="r"><code># plot regression
+ggplot(ggl, aes(Reviews, Rating)) + geom_point(aes(color = Type), 
+    alpha = 0.7) + geom_smooth(method = &quot;lm&quot;, se = F, linetype = &quot;longdash&quot;, 
+    colour = &quot;black&quot;, size = 1) + scale_x_log10(labels = scales::number)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># interaction plot no data points below 3rd break on y axis
+# ylim set to 3 min, 5 max
+ggplot(ggl, aes(x = Reviews_c, y = Rating)) + geom_point() + 
+    geom_smooth(method = &quot;lm&quot;, formula = y ~ 1, se = F, fullrange = T, 
+        aes(color = Type)) + theme(legend.position = &quot;none&quot;) + 
+    ggtitle(&quot;t-test&quot;) + xlab(&quot; &quot;) + scale_x_log10(labels = scales::number) + 
+    ylim(3, 5)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># proportion of variance explained in model
+summary(fit1)$r.sq</code></pre>
+<pre><code>## [1] 0.007315683</code></pre>
+<pre class="r"><code># assumptions: linearity and homoskedasticity -&gt;&gt; not met
+resids &lt;- fit1$residuals
+fit1vals &lt;- fit1$fitted.values
+ggplot() + geom_point(aes(fit1vals, resids)) + geom_hline(yintercept = 0, 
+    col = &quot;red&quot;) + scale_x_log10(labels = scales::number)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># assumptions: normality histogram of the distribution of
+# residuals
+ggplot() + geom_histogram(aes(resids), bins = 20)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># qq-plot of the distribution of residuals
+ggplot() + geom_qq(aes(sample = resids)) + geom_qq_line(aes(sample = resids))</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-4-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ks.test(resids, &quot;pnorm&quot;, sd = sd(resids))</code></pre>
+<pre><code>## 
+##  One-sample Kolmogorov-Smirnov test
+## 
+## data:  resids
+## D = 0.14, p-value &lt; 2.2e-16
+## alternative hypothesis: two-sided</code></pre>
+<pre class="r"><code># compute regression WITH robust standard errors ho:
+# homoskedastic
+bptest(fit1)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit1
+## BP = 9.3983, df = 3, p-value = 0.02444</code></pre>
+<pre class="r"><code># uncorrected SEs
+summary(fit1)$coef[, 1:2]</code></pre>
+<pre><code>##                  Estimate   Std. Error
+## (Intercept)  4.155518e+00 7.348784e-03
+## Reviews      3.112780e-08 5.297323e-09
+## TypePaid     9.872990e-02 2.486160e-02
+## Size        -1.527257e-04 6.815140e-05</code></pre>
+<pre class="r"><code># corrected SEs
+coeftest(fit1, vcov = vcovHC(fit1))[, 1:2]</code></pre>
+<pre><code>##                  Estimate   Std. Error
+## (Intercept)  4.155518e+00 7.546512e-03
+## Reviews      3.112780e-08 7.003825e-09
+## TypePaid     9.872990e-02 2.539682e-02
+## Size        -1.527257e-04 6.732702e-05</code></pre>
+<p><font size="3.5"> For every one unit increase in Reviews, the Rating of an app increases by 3.11e-08 on average, t = 5.876, df = 7084, p-value &lt; 0.001. For every one unit increase in Size, the Rating of an app decreases by 1.527e-04 on average, t = -2.241, df = 7084, p-value &lt; 0.05. After controlling for Reviews and Size, there is a significant difference in the Rating of an app in the Google Play Store between paid and free apps, t = 3.971, df = 7084, p-value &lt; 0.001.
+After mean centering Reviews and Size, an interaction linear regression was ran. Intercept: 4.157 is mean/predicted Rating for free apps with an average Size and average amount of Reviews. For apps with an average amount of reviews, Paid apps have an mean/predicted Rating that is 6.12e-08 greater than Free apps, difference is significant.
+Assumptions of linearity, normality, and homoskedasticity can be observed in the graphs visualized above. Although all assumptions were not met, the regression was recomputed with robust standard errors. The corrected standard errors for the intercept and Reviews became larger while TypePaid and Size decreased. This means when a testing for a t-statistic, the Intercept and Reviews will have a higher chance at having a lower p-value (less likely to reject the null hypothesis). </font>
+<br></p>
+<p><strong>BOOTSTRAPED STANDARD ERRORS</strong></p>
+<pre class="r"><code># regress interaction of centered Reviews and Type
+fit3 &lt;- lm(Rating ~ Reviews_c * Type * Size_c, data = ggl)
+summary(fit3)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Rating ~ Reviews_c * Type * Size_c, data = ggl)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.2389 -0.1757  0.1200  0.3487  0.9629 
+## 
+## Coefficients:
+##                             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)                4.157e+00  6.880e-03 604.200  &lt; 2e-16 ***
+## Reviews_c                  6.106e-08  9.386e-09   6.506 8.25e-11 ***
+## TypePaid                   3.962e-01  1.334e-01   2.970 0.002992 ** 
+## Size_c                    -2.750e-04  7.991e-05  -3.441 0.000583 ***
+## Reviews_c:TypePaid         1.830e-06  8.114e-07   2.256 0.024107 *  
+## Reviews_c:Size_c          -7.500e-10  1.938e-10  -3.869 0.000110 ***
+## TypePaid:Size_c            2.331e-03  3.711e-03   0.628 0.530022    
+## Reviews_c:TypePaid:Size_c  1.368e-08  2.226e-08   0.614 0.538942    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.555 on 7080 degrees of freedom
+## Multiple R-squared:  0.01022,    Adjusted R-squared:  0.009242 
+## F-statistic: 10.44 on 7 and 7080 DF,  p-value: 4.079e-13</code></pre>
+<pre class="r"><code># interaction coef
+coef(fit3) %&gt;% round(10)</code></pre>
+<pre><code>##               (Intercept)                 Reviews_c                  TypePaid 
+##              4.1570324181              0.0000000611              0.3962233505 
+##                    Size_c        Reviews_c:TypePaid          Reviews_c:Size_c 
+##             -0.0002749586              0.0000018304             -0.0000000007 
+##           TypePaid:Size_c Reviews_c:TypePaid:Size_c 
+##              0.0023307839              0.0000000137</code></pre>
+<pre class="r"><code># normal theory SEs
+coeftest(fit3)[, 1:2]</code></pre>
+<pre><code>##                                Estimate   Std. Error
+## (Intercept)                4.157032e+00 6.880229e-03
+## Reviews_c                  6.106370e-08 9.385883e-09
+## TypePaid                   3.962234e-01 1.334275e-01
+## Size_c                    -2.749586e-04 7.990984e-05
+## Reviews_c:TypePaid         1.830372e-06 8.113714e-07
+## Reviews_c:Size_c          -7.499899e-10 1.938248e-10
+## TypePaid:Size_c            2.330784e-03 3.711421e-03
+## Reviews_c:TypePaid:Size_c  1.367888e-08 2.226222e-08</code></pre>
+<pre class="r"><code># robust/corrected SEs
+coeftest(fit3, vcov = vcovHC(fit2))[, 1:2]</code></pre>
+<pre><code>##                                Estimate   Std. Error
+## (Intercept)                4.157032e+00 6.825279e-03
+## Reviews_c                  6.106370e-08 8.291818e-09
+## TypePaid                   3.962234e-01 1.156097e-01
+## Size_c                    -2.749586e-04 7.724059e-05
+## Reviews_c:TypePaid         1.830372e-06 7.227169e-07
+## Reviews_c:Size_c          -7.499899e-10 1.561870e-10
+## TypePaid:Size_c            2.330784e-03 1.672343e-03
+## Reviews_c:TypePaid:Size_c  1.367888e-08 1.043558e-08</code></pre>
+<pre class="r"><code># resample observations 5000x for lm with interaction
+samp_distn &lt;- replicate(5000, {
+    # bootstrap sample of rows
+    boot_dat &lt;- sample_frac(ggl, replace = T)
+    # fit interaction model on bootstrap sample
+    fit3 &lt;- lm(Rating ~ Reviews_c * Type * Size_c, data = boot_dat)
+    coef(fit3)
+})
+# estimated standard errors (sampling rows)
+samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)    Reviews_c  TypePaid       Size_c Reviews_c:TypePaid
+## 1 0.006768979 8.115732e-09 0.1428655 7.632998e-05       8.911081e-07
+##   Reviews_c:Size_c TypePaid:Size_c Reviews_c:TypePaid:Size_c
+## 1     1.561447e-10     0.002886606              1.741114e-08</code></pre>
+<p><font size="3.5"> When the standard errors are bootstrapped, the rows are resampled. Although they are all differ within a 0.1 difference, the standard errors that increased due to bootstrapping were: Reviews (mean centered), Size (mean centered), and interaction between Reviews_c:TypePaid. If the bootstrap standard errors were used, these variables and interactions would have a lower p-value and a higher chance at rejecting the null hypothesis. </font>
+<br></p>
+<p><strong>LOGISTIC REGRESSION WITH BINARY VARIABLE</strong></p>
+<pre class="r"><code># binary categorical variable: Type Free = 0 , Paid = 1
+gglB &lt;- ggl %&gt;% mutate(y = ifelse(Type == &quot;Paid&quot;, 1, 0))
+gglB$Type &lt;- factor(gglB$Type, levels = c(&quot;Paid&quot;, &quot;Free&quot;))
+head(gglB) %&gt;% kbl(caption = &quot;**Binary Variable Added**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-6">Table 4: </span><strong>Binary Variable Added</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+ID
+</th>
+<th style="text-align:left;">
+Category
+</th>
+<th style="text-align:right;">
+Rating
+</th>
+<th style="text-align:right;">
+Reviews
+</th>
+<th style="text-align:right;">
+Size
+</th>
+<th style="text-align:left;">
+Type
+</th>
+<th style="text-align:right;">
+Reviews_c
+</th>
+<th style="text-align:right;">
+Size_c
+</th>
+<th style="text-align:right;">
+y
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.1
+</td>
+<td style="text-align:right;">
+159
+</td>
+<td style="text-align:right;">
+19.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-168334.16
+</td>
+<td style="text-align:right;">
+-18.41084
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+3.9
+</td>
+<td style="text-align:right;">
+967
+</td>
+<td style="text-align:right;">
+14.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-167526.16
+</td>
+<td style="text-align:right;">
+-23.41084
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.7
+</td>
+<td style="text-align:right;">
+87510
+</td>
+<td style="text-align:right;">
+8.7
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-80983.16
+</td>
+<td style="text-align:right;">
+-28.71084
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.5
+</td>
+<td style="text-align:right;">
+215644
+</td>
+<td style="text-align:right;">
+25.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+47150.84
+</td>
+<td style="text-align:right;">
+-12.41084
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.3
+</td>
+<td style="text-align:right;">
+967
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-167526.16
+</td>
+<td style="text-align:right;">
+-34.61084
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.4
+</td>
+<td style="text-align:right;">
+167
+</td>
+<td style="text-align:right;">
+5.6
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-168326.16
+</td>
+<td style="text-align:right;">
+-31.81084
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># logistic regression
+fit4 &lt;- glm(y ~ Rating + Reviews + Size, data = gglB, family = binomial)
+summary(fit4)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = y ~ Rating + Reviews + Size, family = binomial, 
+##     data = gglB)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -0.8582  -0.4593  -0.4034  -0.2658   4.2517  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -4.233e+00  3.774e-01 -11.216  &lt; 2e-16 ***
+## Rating       4.729e-01  8.825e-02   5.358 8.42e-08 ***
+## Reviews     -1.719e-05  2.428e-06  -7.078 1.47e-12 ***
+## Size         1.263e-03  3.212e-04   3.930 8.49e-05 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 3833.3  on 7087  degrees of freedom
+## Residual deviance: 3615.3  on 7084  degrees of freedom
+## AIC: 3623.3
+## 
+## Number of Fisher Scoring iterations: 11</code></pre>
+<pre class="r"><code># exponentiate coefficients for interpretation
+exp(coef(fit4))</code></pre>
+<pre><code>## (Intercept)      Rating     Reviews        Size 
+##  0.01450914  1.60458805  0.99998281  1.00126336</code></pre>
+<pre class="r"><code># confusion matrix try 2
+prob &lt;- predict(fit4, type = &quot;response&quot;)
+pred &lt;- ifelse(prob &gt; 0.5, 1, 0)
+table(prediction = pred, truth = gglB$y) %&gt;% addmargins</code></pre>
+<pre><code>##           truth
+## prediction    0    1  Sum
+##        0   6545  543 7088
+##        Sum 6545  543 7088</code></pre>
+<pre class="r"><code># Accuracy
+(6545 + 543)/7088</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code># Sensitivity (TPR)
+0/0</code></pre>
+<pre><code>## [1] NaN</code></pre>
+<pre class="r"><code># Specificity (TNR)
+6545/6545</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code># Precision (PPV)
+0/0</code></pre>
+<pre><code>## [1] NaN</code></pre>
+<pre class="r"><code># logit values added to dataframe
+gglB$logit &lt;- predict(fit4, type = &quot;link&quot;)
+head(gglB) %&gt;% kbl(caption = &quot;**Logit values Added**&quot;) %&gt;% kable_styling(bootstrap_options = c(&quot;striped&quot;, 
+    &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-6">Table 4: </span><strong>Logit values Added</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+ID
+</th>
+<th style="text-align:left;">
+Category
+</th>
+<th style="text-align:right;">
+Rating
+</th>
+<th style="text-align:right;">
+Reviews
+</th>
+<th style="text-align:right;">
+Size
+</th>
+<th style="text-align:left;">
+Type
+</th>
+<th style="text-align:right;">
+Reviews_c
+</th>
+<th style="text-align:right;">
+Size_c
+</th>
+<th style="text-align:right;">
+y
+</th>
+<th style="text-align:right;">
+logit
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.1
+</td>
+<td style="text-align:right;">
+159
+</td>
+<td style="text-align:right;">
+19.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-168334.16
+</td>
+<td style="text-align:right;">
+-18.41084
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+-2.272966
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+3.9
+</td>
+<td style="text-align:right;">
+967
+</td>
+<td style="text-align:right;">
+14.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-167526.16
+</td>
+<td style="text-align:right;">
+-23.41084
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+-2.387739
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.7
+</td>
+<td style="text-align:right;">
+87510
+</td>
+<td style="text-align:right;">
+8.7
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-80983.16
+</td>
+<td style="text-align:right;">
+-28.71084
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+-3.503538
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.5
+</td>
+<td style="text-align:right;">
+215644
+</td>
+<td style="text-align:right;">
+25.0
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+47150.84
+</td>
+<td style="text-align:right;">
+-12.41084
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+-5.779750
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.3
+</td>
+<td style="text-align:right;">
+967
+</td>
+<td style="text-align:right;">
+2.8
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-167526.16
+</td>
+<td style="text-align:right;">
+-34.61084
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+-2.212733
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+ART_AND_DESIGN
+</td>
+<td style="text-align:right;">
+4.4
+</td>
+<td style="text-align:right;">
+167
+</td>
+<td style="text-align:right;">
+5.6
+</td>
+<td style="text-align:left;">
+Free
+</td>
+<td style="text-align:right;">
+-168326.16
+</td>
+<td style="text-align:right;">
+-31.81084
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+-2.148161
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># logit density ggplot
+gglB %&gt;% ggplot() + geom_density(aes(logit, color = Type, fill = Type), 
+    alpha = 0.4) + theme(legend.position = c(0.835, 0.75)) + 
+    geom_vline(xintercept = 0) + xlab(&quot;logit (log-odds)&quot;) + geom_rug(aes(logit, 
+    color = Type)) + xlim(-7.5, 0)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># ROC plot
+ROCplot &lt;- ggplot(gglB) + geom_roc(aes(d = y, m = prob), n.cuts = 0) + 
+    geom_segment(aes(x = 0, xend = 1, y = 0, yend = 1), lty = 2)
+ROCplot</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># calculate AUC
+calc_auc(ROCplot) %&gt;% kbl(caption = &quot;**AUC from ROCplot**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-6">Table 4: </span><strong>AUC from ROCplot</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+PANEL
+</th>
+<th style="text-align:right;">
+group
+</th>
+<th style="text-align:right;">
+AUC
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+-1
+</td>
+<td style="text-align:right;">
+0.6853133
+</td>
+</tr>
+</tbody>
+</table>
+<p><font size="3.5"> After manipulating the Type variable into a 1 0 binary column, a logistic regression was computed from Rating, Reviews, and Size. For every 1 unit increase of Rating, the odds of an app in the Google Play Store being paid are multiplied by e^0.4729 = 1.60. The odds of an app being paid increases by 2.3% for every additional rating. For every 1 unit increase of Reviews, the odds of an app being paid are multiplied by 0.999. The odds increase by 1.45% for every additional review. As for Size, for every 1 unit increase, the odds of an app being paid is multiplied by 1.0013. The odds increase by 1.45% for every additional Size.
+After computing an ROC curve, we can visualize how well the model is able to visualize trade-off between sensitivity and specificity. A more quantitative answer is given with the AUC value of 0.685, concluding that it would be difficult to predict if the app cost money or is free (Type) from just Rating, Reviews, and Size. That being said, AUC shows that the probability that a randomly selected app is paid (y = 1) has a higher predicted probability than a randomly selected free app.</font>
+<br></p>
+<p><strong>LOGISTIC REGRESSION FROM ALL VARIABLES</strong></p>
+<pre class="r"><code># Price variable was giving 1 for every diagnostic likely due
+# to large range (0-400) ID, Price, Genre, logit were removed
+# Type removed due to y being its binary representative Genre
+# removed since it overlaps too much with Category
+gglB &lt;- gglB %&gt;% select(2:5, 9)
+fit5 &lt;- glm(y ~ (.), data = gglB, family = binomial)
+prob &lt;- predict(fit5, type = &quot;response&quot;)
+
+# class diagnostic algorithm
+class_diag &lt;- function(probs, truth) {
+    # CONFUSION MATRIX: CALCULATE ACCURACY, TPR, TNR, PPV
+    tab &lt;- table(factor(probs &gt; 0.5, levels = c(&quot;FALSE&quot;, &quot;TRUE&quot;)), 
+        truth)
+    acc = sum(diag(tab))/sum(tab)
+    sens = tab[2, 2]/colSums(tab)[2]
+    spec = tab[1, 1]/colSums(tab)[1]
+    ppv = tab[2, 2]/rowSums(tab)[2]
+    f1 = 2 * (sens * ppv)/(sens + ppv)
+    if (is.numeric(truth) == FALSE &amp; is.logical(truth) == FALSE) 
+        truth &lt;- as.numeric(truth) - 1
+    # CALCULATE EXACT AUC
+    ord &lt;- order(probs, decreasing = TRUE)
+    probs &lt;- probs[ord]
+    truth &lt;- truth[ord]
+    TPR = cumsum(truth)/max(1, sum(truth))
+    FPR = cumsum(!truth)/max(1, sum(!truth))
+    dup &lt;- c(probs[-1] &gt;= probs[-length(probs)], FALSE)
+    TPR &lt;- c(0, TPR[!dup], 1)
+    FPR &lt;- c(0, FPR[!dup], 1)
+    n &lt;- length(TPR)
+    auc &lt;- sum(((TPR[-1] + TPR[-n])/2) * (FPR[-1] - FPR[-n]))
+    data.frame(acc, sens, spec, ppv, f1, auc)
+}
+
+# in sample classification diagnostics
+class_diag(prob, gglB$y) %&gt;% kbl(caption = &quot;**Classification Diagnostics 
+      Involving All Main Effects**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 5: </span><strong>Classification Diagnostics
+Involving All Main Effects</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+acc
+</th>
+<th style="text-align:right;">
+sens
+</th>
+<th style="text-align:right;">
+spec
+</th>
+<th style="text-align:right;">
+ppv
+</th>
+<th style="text-align:right;">
+f1
+</th>
+<th style="text-align:right;">
+auc
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.9235327
+</td>
+<td style="text-align:right;">
+0.0036832
+</td>
+<td style="text-align:right;">
+0.9998472
+</td>
+<td style="text-align:right;">
+0.6666667
+</td>
+<td style="text-align:right;">
+0.007326
+</td>
+<td style="text-align:right;">
+0.7649591
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># 10 fold cross validation
+set.seed(1234)
+k = 10  #choose number of folds
+data &lt;- gglB[sample(nrow(gglB)), ]  #randomly order rows
+folds &lt;- cut(seq(1:nrow(gglB)), breaks = k, labels = F)  #create folds
+diags &lt;- NULL
+for (i in 1:k) {
+    ## Create training and test sets
+    train &lt;- data[folds != i, ]
+    test &lt;- data[folds == i, ]
+    truth &lt;- test$y  ## Truth labels for fold i
+    ## Train model on training set (all but fold i)
+    fit &lt;- glm(y ~ (.), data = train, family = &quot;binomial&quot;)
+    ## Test model on test set (fold i)
+    probs &lt;- predict(fit, newdata = test, type = &quot;response&quot;)
+    ## Get diagnostics for fold i
+    diags &lt;- rbind(diags, class_diag(probs, truth))
+}
+# out of sample classification diagnostics
+summarize_all(diags, mean)</code></pre>
+<pre><code>##         acc        sens     spec ppv  f1       auc
+## 1 0.9233929 0.003837719 0.999693 NaN NaN 0.7497887</code></pre>
+<pre class="r"><code># LASSO with 1 categorical variable convert categorical to
+# factor
+gglB$Category &lt;- factor(gglB$Category)
+y &lt;- as.matrix(gglB$y)
+# the -1 drops intercept/ref group
+x &lt;- model.matrix(y ~ -1 + ., data = gglB)
+head(x)</code></pre>
+<pre><code>##   CategoryART_AND_DESIGN CategoryAUTO_AND_VEHICLES CategoryBEAUTY
+## 1                      1                         0              0
+## 2                      1                         0              0
+##   CategoryBOOKS_AND_REFERENCE CategoryBUSINESS CategoryCOMICS
+## 1                           0                0              0
+## 2                           0                0              0
+##   CategoryCOMMUNICATION CategoryDATING CategoryEDUCATION CategoryENTERTAINMENT
+## 1                     0              0                 0                     0
+## 2                     0              0                 0                     0
+##   CategoryEVENTS CategoryFAMILY CategoryFINANCE CategoryFOOD_AND_DRINK
+## 1              0              0               0                      0
+## 2              0              0               0                      0
+##   CategoryGAME CategoryHEALTH_AND_FITNESS CategoryHOUSE_AND_HOME
+## 1            0                          0                      0
+## 2            0                          0                      0
+##   CategoryLIBRARIES_AND_DEMO CategoryLIFESTYLE CategoryMAPS_AND_NAVIGATION
+## 1                          0                 0                           0
+## 2                          0                 0                           0
+##   CategoryMEDICAL CategoryNEWS_AND_MAGAZINES CategoryPARENTING
+## 1               0                          0                 0
+## 2               0                          0                 0
+##   CategoryPERSONALIZATION CategoryPHOTOGRAPHY CategoryPRODUCTIVITY
+## 1                       0                   0                    0
+## 2                       0                   0                    0
+##   CategorySHOPPING CategorySOCIAL CategorySPORTS CategoryTOOLS
+## 1                0              0              0             0
+## 2                0              0              0             0
+##   CategoryTRAVEL_AND_LOCAL CategoryVIDEO_PLAYERS CategoryWEATHER Rating Reviews
+## 1                        0                     0               0    4.1     159
+## 2                        0                     0               0    3.9     967
+##   Size
+## 1 19.0
+## 2 14.0
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 4 rows ]</code></pre>
+<pre class="r"><code>x &lt;- scale(x)
+
+# LASSO
+set.seed(1234)
+cv2 &lt;- cv.glmnet(x, y, family = &quot;binomial&quot;)
+lasso2 &lt;- glmnet(x, y, family = &quot;binomial&quot;, lambda = cv2$lambda.1se)
+coef(lasso2)</code></pre>
+<pre><code>## 37 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                       s0
+## (Intercept)                 -2.780902525
+## CategoryART_AND_DESIGN       .          
+## CategoryAUTO_AND_VEHICLES   -0.102378970
+## CategoryBEAUTY              -0.061695099
+## CategoryBOOKS_AND_REFERENCE  .          
+## CategoryBUSINESS            -0.031956800
+## CategoryCOMICS              -0.078359161
+## CategoryCOMMUNICATION        0.080471265
+## CategoryDATING              -0.074528925
+## CategoryEDUCATION            .          
+## CategoryENTERTAINMENT       -0.033045552
+## CategoryEVENTS              -0.068421654
+## CategoryFAMILY               0.230328477
+## CategoryFINANCE              .          
+## CategoryFOOD_AND_DRINK      -0.052882468
+## CategoryGAME                 0.202902159
+## CategoryHEALTH_AND_FITNESS  -0.007564582
+## CategoryHOUSE_AND_HOME      -0.079347990
+## CategoryLIBRARIES_AND_DEMO  -0.121077711
+## CategoryLIFESTYLE            .          
+## CategoryMAPS_AND_NAVIGATION  .          
+## CategoryMEDICAL              0.257840534
+## CategoryNEWS_AND_MAGAZINES  -0.114032669
+## CategoryPARENTING           -0.019271382
+## CategoryPERSONALIZATION      0.292005363
+## CategoryPHOTOGRAPHY          0.015094181
+## CategoryPRODUCTIVITY         .          
+## CategorySHOPPING            -0.104875456
+## CategorySOCIAL              -0.114834305
+## CategorySPORTS               0.079293757
+## CategoryTOOLS                0.134063707
+## CategoryTRAVEL_AND_LOCAL     .          
+## CategoryVIDEO_PLAYERS       -0.095925228
+## CategoryWEATHER              0.053316408
+## Rating                       0.162328683
+## Reviews                     -1.619368779
+## Size                         0.094343792</code></pre>
+<pre class="r"><code># picks an optimal value for lambda through 10-fold CV
+cv &lt;- cv.glmnet(x, y, family = &quot;binomial&quot;)
+{
+    plot(cv$glmnet.fit, &quot;lambda&quot;, label = TRUE)
+    abline(v = log(cv$lambda.1se))
+    abline(v = log(cv$lambda.min), lty = 2)
+}</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-7-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># create dummies for category types that are non-zero
+lasso_dat &lt;- gglB %&gt;% mutate(AutoAndVehicles = ifelse(Category == 
+    &quot;AUTO_AND_VEHICLES&quot;, 1, 0)) %&gt;% mutate(Beauty = ifelse(Category == 
+    &quot;BEAUTY&quot;, 1, 0)) %&gt;% mutate(Business = ifelse(Category == 
+    &quot;BUSINESS&quot;, 1, 0)) %&gt;% mutate(Comics = ifelse(Category == 
+    &quot;COMICS&quot;, 1, 0)) %&gt;% mutate(Communication = ifelse(Category == 
+    &quot;COMMUNICATION&quot;, 1, 0)) %&gt;% mutate(Dating = ifelse(Category == 
+    &quot;DATING&quot;, 1, 0)) %&gt;% mutate(Entertainment = ifelse(Category == 
+    &quot;ENTERTAINMENT&quot;, 1, 0)) %&gt;% mutate(Events = ifelse(Category == 
+    &quot;EVENTS&quot;, 1, 0)) %&gt;% mutate(Family = ifelse(Category == &quot;FAMILY&quot;, 
+    1, 0)) %&gt;% mutate(FoodAndDrink = ifelse(Category == &quot;FOOD_AND_DRINK&quot;, 
+    1, 0)) %&gt;% mutate(Game = ifelse(Category == &quot;GAME&quot;, 1, 0)) %&gt;% 
+    mutate(HealthAndFitness = ifelse(Category == &quot;HEALTH_AND_FITNESS&quot;, 
+        1, 0)) %&gt;% mutate(HouseAndHome = ifelse(Category == &quot;HOUSE_AND_HOME&quot;, 
+    1, 0)) %&gt;% mutate(LibrariesAndDemo = ifelse(Category == &quot;LIBRARIES_AND_DEMO&quot;, 
+    1, 0)) %&gt;% mutate(Medical = ifelse(Category == &quot;MEDICAL&quot;, 
+    1, 0)) %&gt;% mutate(NewsAndMagazines = ifelse(Category == &quot;NEWS_AND_MAGAZINES&quot;, 
+    1, 0)) %&gt;% mutate(Parenting = ifelse(Category == &quot;PARENTING&quot;, 
+    1, 0)) %&gt;% mutate(Personalization = ifelse(Category == &quot;PERSONALIZATION&quot;, 
+    1, 0)) %&gt;% mutate(Photography = ifelse(Category == &quot;PHOTOGRAPHY&quot;, 
+    1, 0)) %&gt;% mutate(Productivity = ifelse(Category == &quot;PRODUCTIVITY&quot;, 
+    1, 0)) %&gt;% mutate(Shopping = ifelse(Category == &quot;SHOPPING&quot;, 
+    1, 0)) %&gt;% mutate(Social = ifelse(Category == &quot;SOCIAL&quot;, 1, 
+    0)) %&gt;% mutate(Sports = ifelse(Category == &quot;SPORTS&quot;, 1, 0)) %&gt;% 
+    mutate(Tools = ifelse(Category == &quot;TOOLS&quot;, 1, 0)) %&gt;% mutate(VideoPlayers = ifelse(Category == 
+    &quot;VIDEO_PLAYERS&quot;, 1, 0)) %&gt;% mutate(Weather = ifelse(Category == 
+    &quot;WEATHER&quot;, 1, 0)) %&gt;% select(AutoAndVehicles:Beauty, Business:Dating, 
+    Entertainment:Family, FoodAndDrink:LibrariesAndDemo, Medical:Tools, 
+    VideoPlayers:Weather, Rating:Size, y)
+
+
+set.seed(1234)
+k = 10
+data1 &lt;- lasso_dat[sample(nrow(lasso_dat)), ]  #randomly order rows
+folds &lt;- cut(seq(1:nrow(lasso_dat)), breaks = k, labels = F)  #create folds
+diags &lt;- NULL
+for (i in 1:k) {
+    ## Create training and test sets
+    train &lt;- data1[folds != i, ]
+    test &lt;- data1[folds == i, ]
+    truth &lt;- test$y
+    ## Train model on training set
+    fit &lt;- glm(y ~ AutoAndVehicles + Beauty + Business + Comics + 
+        Communication + Dating + Entertainment + Events + Family + 
+        FoodAndDrink + Game + HealthAndFitness + HouseAndHome + 
+        LibrariesAndDemo + Medical + NewsAndMagazines + Parenting + 
+        Personalization + Photography + Productivity + Shopping + 
+        Social + Sports + Tools + VideoPlayers + Weather + Rating + 
+        Reviews + Size, data = train, family = &quot;binomial&quot;)
+    probs &lt;- predict(fit, newdata = test, type = &quot;response&quot;)
+    ## Test model on test set (save all k results)
+    diags &lt;- rbind(diags, class_diag(probs, truth))
+}
+diags %&gt;% summarize_all(mean)</code></pre>
+<pre><code>##         acc        sens     spec ppv  f1       auc
+## 1 0.9233929 0.003837719 0.999693 NaN NaN 0.7525525</code></pre>
+<p><font size="3.5"> The average diagnostics show that the AUC increased from the logistic regression that only took into account 3 predictors (auc = 0.6853) to 0.7649, so the accuracy is fair. A 10 fold cross validation was used to divide the dataset into 10 equal parts to find out the average class diagnostics over 10 tests. After the test ran, an out-of-sample classification diagnostics actually showed that the AUC slightly decreased to 0.749, although it is still larger than the original logistic regression’s insample metrics.
+LASSO was then implemented, which returned all variables that were non-zero. LASSO was used as it penalizes the mdoel as it becomes more complex, reducing and preventing overfitting. Out of 37 possible variables, 29 ended up being non-zeros, 26 sub-variables from Category and the other 3 being Rating, Reviews, and Size. This time a 10 fold CV was conducted on the non-zero variables, which were deemed the most predictive in the dataset. The values in this diagnostic did not change significantly, therefore the original model was probably not overfitting too much. </font></p>
+<p><br></p>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

@@ -1,0 +1,2818 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Ayanna Fisher" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 1: Exploratory Data Analysis</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1/">Project 1: Exploratory Data Analysis</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+<script src="../../rmarkdown-libs/kePrint/kePrint.js"></script>
+<link href="../../rmarkdown-libs/lightable/lightable.css" rel="stylesheet" />
+
+
+<p>NAME: Ayanna Fisher
+EID: adf2353
+DUE: 04/04/2021</p>
+<p><br>
+<strong>INTRODUCTION</strong>
+<br>
+<font size="3.5"> For this project I wanted to see if there was a relationship between the condition of roads/infrastructure of each state and their corresponding GDP status for each year.
+The infrastructure data frame used in this assignment comes from the U.S. Bureau of Transportation Statistics –&gt; <a href="https://www.bts.gov/road-condition" class="uri">https://www.bts.gov/road-condition</a> . It originally had 5 columns, listing the state, international roughness index, class, year, and total miles. I expect to tidy this up by taking out the IRI column and use pivot wider on the class column.
+The GDP dataset was sourced from the U.S. Department of Commerce –&gt; <a href="https://apps.bea.gov/iTable/iTable.cfm?reqid=70&amp;step=1#reqid=70&amp;step=1" class="uri">https://apps.bea.gov/iTable/iTable.cfm?reqid=70&amp;step=1#reqid=70&amp;step=1</a> . This df has 31 variables and 484 observations. The variables it contains include, GeoName (states), years (1997-2019), region, etc. I will likely use pivot longer to combine all of the years into 1 column and delete a few columns that won’t be utilized for this project for this project.</font>
+<br><br />
+<strong>1. TIDYING</strong></p>
+<pre class="r"><code>library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(kableExtra)
+library(ggplot2)
+
+# GDP by STATE df (1997-2019)
+stGDP &lt;- read_csv(&quot;SAGDP1__ALL_AREAS_1997_2019.csv&quot;)
+
+# TIDYING GDP DF
+step1 &lt;- stGDP %&gt;% select(2:3, 7:8, 23:31)
+step2 &lt;- step1 %&gt;% pivot_longer(c(&quot;2011&quot;:&quot;2019&quot;), names_to = &quot;Year&quot;) %&gt;% 
+    separate(Year, into = &quot;Year&quot;, convert = T)
+step3 &lt;- step2 %&gt;% select(1:2, 5, 3, 6) %&gt;% na.omit() %&gt;% pivot_wider(names_from = &quot;Description&quot;, 
+    values_from = &quot;value&quot;)
+final_GDPdf &lt;- step3 %&gt;% rename(RealGDP = 4, CQI = 5, NominalGDP = 6, 
+    Subsidies = 11) %&gt;% select(1:6, 11) %&gt;% mutate(Region = as.character(Region), 
+    Year = as.character((Year)))
+
+# tidy GDP df
+final_GDPdf %&gt;% head(5) %&gt;% kbl(caption = &quot;**Tidy GDP**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-1">Table 1: </span><strong>Tidy GDP</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+GeoName
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+CQI
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2011
+</td>
+<td style="text-align:right;">
+185666.9
+</td>
+<td style="text-align:right;">
+99.525
+</td>
+<td style="text-align:right;">
+181929.9
+</td>
+<td style="text-align:right;">
+-509.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2012
+</td>
+<td style="text-align:right;">
+186553.9
+</td>
+<td style="text-align:right;">
+100.000
+</td>
+<td style="text-align:right;">
+186553.9
+</td>
+<td style="text-align:right;">
+-484.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2013
+</td>
+<td style="text-align:right;">
+188814.2
+</td>
+<td style="text-align:right;">
+101.212
+</td>
+<td style="text-align:right;">
+192166.5
+</td>
+<td style="text-align:right;">
+-457.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2014
+</td>
+<td style="text-align:right;">
+187568.0
+</td>
+<td style="text-align:right;">
+100.544
+</td>
+<td style="text-align:right;">
+195037.7
+</td>
+<td style="text-align:right;">
+-466.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2015
+</td>
+<td style="text-align:right;">
+189428.8
+</td>
+<td style="text-align:right;">
+101.541
+</td>
+<td style="text-align:right;">
+200197.5
+</td>
+<td style="text-align:right;">
+-440.7
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># Road conditions / Infrastructure df (2011-2019)
+allRC_ &lt;- read_csv(&quot;allRC_.csv&quot;)
+
+# TIDYING ROAD CONDITIONS DF
+st1 &lt;- allRC_ %&gt;% relocate(1, 4, 2, 5) %&gt;% select(1:4)
+final_RCdf &lt;- st1 %&gt;% pivot_wider(names_from = &quot;Class&quot;, values_from = &quot;Miles&quot;) %&gt;% 
+    rename(AcceptableMiles = &quot;Acceptable (miles)&quot;, AcceptablePercent = &quot;Percent Acceptable&quot;, 
+        TotalMiles = &quot;Total (miles)&quot;) %&gt;% mutate(Year = as.character(Year))
+
+# tidy infrastructure df
+final_RCdf %&gt;% head(5) %&gt;% kbl(caption = &quot;**Tidy Infrastructure**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-1">Table 1: </span><strong>Tidy Infrastructure</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+23249.922
+</td>
+<td style="text-align:right;">
+0.8870157
+</td>
+<td style="text-align:right;">
+26211.399
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alaska
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+2811.892
+</td>
+<td style="text-align:right;">
+0.8296608
+</td>
+<td style="text-align:right;">
+3389.207
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arizona
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+12113.409
+</td>
+<td style="text-align:right;">
+0.7913743
+</td>
+<td style="text-align:right;">
+15306.800
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arkansas
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+6050.767
+</td>
+<td style="text-align:right;">
+0.9332849
+</td>
+<td style="text-align:right;">
+6483.301
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+California
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+26223.917
+</td>
+<td style="text-align:right;">
+0.6484012
+</td>
+<td style="text-align:right;">
+40443.969
+</td>
+</tr>
+</tbody>
+</table>
+<p><font size="3.5"> Since the GDP data frame was the larger one of the 2 I’m working on, I decided to tidy that one first. The first thing that I needed to do was delete the columns that I was sure I wouldn’t use. Because the road condition df only dates back to 2011, I deleted columns 9 through 22, which corresponded with years 1997 to 2010. In total, I ended up deleting 18 columns for the first step. I retained columns that would be crucial when combined later on, like States, region, years 2011-2019, and description (the type of GDP). The next thing on the agenda was to use pivot_longer to put all of the years from 2011 to 2019 into one column. Step 3 manipulated the data by getting rid of rows that contained NA values, deleting the column that contained the “X” character that we ha previously separated from the years, and re-order the columns. This was also the step where I first used pivot_wider, to alter the Description column so that each GDP variable (Real, Nominal, etc) had its own column. Lastly was the step to renaming a few essential columns to make it easier to code later, with the function rename().
+Next, I had to tidy the road conditions dataset. Firstly, I organized the variables using relocate(), then selected the variables needed for this project (state, year, class, miles). This was a relatively long df so I used to the pivot_wider on the Class variable. This would allow the data to have 3 separate columns for Acceptable Miles, Percentage, and Total Miles.</font></p>
+<p><br>
+<strong>2. JOINING</strong></p>
+<pre class="r"><code># inner_join() -&gt;&gt; combines based on common ID
+comb1 &lt;- final_RCdf %&gt;% inner_join(final_GDPdf, by = c(State = &quot;GeoName&quot;, 
+    &quot;Year&quot;))
+final_combined &lt;- comb1 %&gt;% relocate(1, 6, 2:5, 7, 9, 8, 10)
+final_combined %&gt;% head() %&gt;% kbl(caption = &quot;**Joined GDP and Infrastructure Dataset**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-2">Table 2: </span><strong>Joined GDP and Infrastructure Dataset</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+CQI
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+23249.922
+</td>
+<td style="text-align:right;">
+0.8870157
+</td>
+<td style="text-align:right;">
+26211.399
+</td>
+<td style="text-align:right;">
+200829.4
+</td>
+<td style="text-align:right;">
+228142.6
+</td>
+<td style="text-align:right;">
+107.652
+</td>
+<td style="text-align:right;">
+-593.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alaska
+</td>
+<td style="text-align:left;">
+8
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+2811.892
+</td>
+<td style="text-align:right;">
+0.8296608
+</td>
+<td style="text-align:right;">
+3389.207
+</td>
+<td style="text-align:right;">
+53255.2
+</td>
+<td style="text-align:right;">
+54385.6
+</td>
+<td style="text-align:right;">
+92.269
+</td>
+<td style="text-align:right;">
+-113.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arizona
+</td>
+<td style="text-align:left;">
+6
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+12113.409
+</td>
+<td style="text-align:right;">
+0.7913743
+</td>
+<td style="text-align:right;">
+15306.800
+</td>
+<td style="text-align:right;">
+323597.6
+</td>
+<td style="text-align:right;">
+370119.1
+</td>
+<td style="text-align:right;">
+120.715
+</td>
+<td style="text-align:right;">
+-809.8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Arkansas
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+6050.767
+</td>
+<td style="text-align:right;">
+0.9332849
+</td>
+<td style="text-align:right;">
+6483.301
+</td>
+<td style="text-align:right;">
+117447.1
+</td>
+<td style="text-align:right;">
+130954.1
+</td>
+<td style="text-align:right;">
+109.031
+</td>
+<td style="text-align:right;">
+-1223.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+California
+</td>
+<td style="text-align:left;">
+8
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+26223.917
+</td>
+<td style="text-align:right;">
+0.6484012
+</td>
+<td style="text-align:right;">
+40443.969
+</td>
+<td style="text-align:right;">
+2800505.4
+</td>
+<td style="text-align:right;">
+3132800.6
+</td>
+<td style="text-align:right;">
+130.615
+</td>
+<td style="text-align:right;">
+-9110.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Colorado
+</td>
+<td style="text-align:left;">
+7
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+12655.845
+</td>
+<td style="text-align:right;">
+0.7777576
+</td>
+<td style="text-align:right;">
+16272.224
+</td>
+<td style="text-align:right;">
+356280.2
+</td>
+<td style="text-align:right;">
+392986.0
+</td>
+<td style="text-align:right;">
+130.222
+</td>
+<td style="text-align:right;">
+-1213.8
+</td>
+</tr>
+</tbody>
+</table>
+<p><font size="3.5">The function inner_join was used to merge the final GDP df and the final infrastructure df. Inner_join was implemented instead of other functions like full/right/left_join because it combines via common ID (in this case State = GeoName and Year) and deletes nonmatches. Then I manipulated the combined df with relocate() to move region next to state.
+</font></p>
+<p><br>
+<strong>3. WRANGLING PT1: DPLYR</strong></p>
+<pre class="r"><code># lag() gives percent increase from previous row
+mut1 &lt;- final_combined %&gt;% arrange(State, Year) %&gt;% mutate(GDPpercentChange = (RealGDP - 
+    lag(RealGDP))/lag(RealGDP))
+
+# case_when() creates categorical varia from numeric
+final_df &lt;- mut1 %&gt;% mutate(letterGrade = case_when(AcceptablePercent &gt; 
+    0.9 ~ &quot;A&quot;, AcceptablePercent &lt; 0.9 &amp; AcceptablePercent &gt;= 
+    0.8 ~ &quot;B&quot;, AcceptablePercent &lt; 0.8 &amp; AcceptablePercent &gt;= 
+    0.7 ~ &quot;C&quot;, AcceptablePercent &lt; 0.7 &amp; AcceptablePercent &gt;= 
+    0.6 ~ &quot;D&quot;, AcceptablePercent &lt; 0.6 ~ &quot;F&quot;)) %&gt;% select(1:4, 
+    6, 5, 12, 7:8, 10:11)
+
+final_df %&gt;% head(5) %&gt;% kbl(caption = &quot;**Final DF With 2 New Variables**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-3">Table 3: </span><strong>Final DF With 2 New Variables</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:left;">
+letterGrade
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2011
+</td>
+<td style="text-align:right;">
+20988
+</td>
+<td style="text-align:right;">
+22943
+</td>
+<td style="text-align:right;">
+0.9147888
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+185666.9
+</td>
+<td style="text-align:right;">
+181929.9
+</td>
+<td style="text-align:right;">
+-509.6
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2012
+</td>
+<td style="text-align:right;">
+15893
+</td>
+<td style="text-align:right;">
+17235
+</td>
+<td style="text-align:right;">
+0.9221352
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+186553.9
+</td>
+<td style="text-align:right;">
+186553.9
+</td>
+<td style="text-align:right;">
+-484.7
+</td>
+<td style="text-align:right;">
+0.0047774
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2013
+</td>
+<td style="text-align:right;">
+18307
+</td>
+<td style="text-align:right;">
+20545
+</td>
+<td style="text-align:right;">
+0.8910684
+</td>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+188814.2
+</td>
+<td style="text-align:right;">
+192166.5
+</td>
+<td style="text-align:right;">
+-457.1
+</td>
+<td style="text-align:right;">
+0.0121161
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2014
+</td>
+<td style="text-align:right;">
+21856
+</td>
+<td style="text-align:right;">
+24254
+</td>
+<td style="text-align:right;">
+0.9011297
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+187568.0
+</td>
+<td style="text-align:right;">
+195037.7
+</td>
+<td style="text-align:right;">
+-466.9
+</td>
+<td style="text-align:right;">
+-0.0066001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Alabama
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2015
+</td>
+<td style="text-align:right;">
+11276
+</td>
+<td style="text-align:right;">
+11554
+</td>
+<td style="text-align:right;">
+0.9759391
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+189428.8
+</td>
+<td style="text-align:right;">
+200197.5
+</td>
+<td style="text-align:right;">
+-440.7
+</td>
+<td style="text-align:right;">
+0.0099207
+</td>
+</tr>
+</tbody>
+</table>
+<p><font size="3.5">To create a percent change in time for Real GDP, the dplyr vector function, lag(), was used to manipulate and create a new variable named “GDPpercentChange”. The second new variable made was a letter grade variable that took the percentages of acceptable miles and converted them into the A-D and F; case_when was used for this part.</font></p>
+<p><br></p>
+<pre class="r"><code># average acceptable amount of miles from 2014 to 2019 when
+# grouped by State state with top average
+final_df %&gt;% group_by(State) %&gt;% filter(Year &gt;= 2014) %&gt;% summarize(mean_AccM = mean(AcceptableMiles, 
+    na.rm = T), mean_pctM = mean(AcceptablePercent, na.rm = T)) %&gt;% 
+    arrange(desc(mean_pctM)) %&gt;% head(1) %&gt;% kbl(caption = &quot;**State with Top Average Acceptable Miles**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-4">Table 4: </span><strong>State with Top Average Acceptable Miles</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:right;">
+mean_AccM
+</th>
+<th style="text-align:right;">
+mean_pctM
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Idaho
+</td>
+<td style="text-align:right;">
+4416.838
+</td>
+<td style="text-align:right;">
+0.9592973
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># state with bottom average
+final_df %&gt;% group_by(State) %&gt;% filter(Year &gt;= 2014) %&gt;% summarize(mean_AccM = mean(AcceptableMiles, 
+    na.rm = T), mean_pctM = mean(AcceptablePercent, na.rm = T)) %&gt;% 
+    arrange(mean_pctM) %&gt;% head(2) %&gt;% kbl(caption = &quot;**State with Bottom Average Acceptable Miles**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-4">Table 4: </span><strong>State with Bottom Average Acceptable Miles</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:right;">
+mean_AccM
+</th>
+<th style="text-align:right;">
+mean_pctM
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+District of Columbia
+</td>
+<td style="text-align:right;">
+27.39643
+</td>
+<td style="text-align:right;">
+0.0615769
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rhode Island
+</td>
+<td style="text-align:right;">
+732.86651
+</td>
+<td style="text-align:right;">
+0.4710058
+</td>
+</tr>
+</tbody>
+</table>
+<p><font size="3.5">When grouped by State and only looking at years from 2014 to 2019, the State with the highest mean percentage of acceptable miles is Idaho, with a mean value of 95% or 4,416.84 miles, while the place with the lowest mean percentage of acceptable miles is Washington D.C. with and average of 27.39 acceptable miles (6.16%). Since D.C. isn’t technically a state, Rhode Island comes in first place as the state with a lowest value of 732.87 miles (or 47%).</font></p>
+<p><br></p>
+<pre class="r"><code># States with highest and lowest Real GDP in 2019
+final_df %&gt;% group_by(State) %&gt;% filter(Year == 2019) %&gt;% select(1:4, 
+    7:8) %&gt;% arrange(desc(RealGDP)) %&gt;% head(3) %&gt;% kbl(caption = &quot;**States with Highest GDP in 2019**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-5">Table 5: </span><strong>States with Highest GDP in 2019</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:left;">
+letterGrade
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+California
+</td>
+<td style="text-align:left;">
+8
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+26223.92
+</td>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:right;">
+2800505
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Texas
+</td>
+<td style="text-align:left;">
+6
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+69296.62
+</td>
+<td style="text-align:left;">
+C
+</td>
+<td style="text-align:right;">
+1764357
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+New York
+</td>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+20097.64
+</td>
+<td style="text-align:left;">
+C
+</td>
+<td style="text-align:right;">
+1490678
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>final_df %&gt;% group_by(State) %&gt;% filter(Year == 2019) %&gt;% select(1:4, 
+    7:8) %&gt;% arrange(RealGDP) %&gt;% head(3) %&gt;% kbl(caption = &quot;**States with Lowest GDP in 2019**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-5">Table 5: </span><strong>States with Lowest GDP in 2019</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:left;">
+letterGrade
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Vermont
+</td>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+3164.933
+</td>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+29806.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Wyoming
+</td>
+<td style="text-align:left;">
+7
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+6793.627
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+39214.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+South Dakota
+</td>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+12497.290
+</td>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+47559.7
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># States with highest and lowest Acceptable Miles in 2019
+final_df %&gt;% group_by(State) %&gt;% filter(Year == 2019) %&gt;% select(1:4, 
+    7:8) %&gt;% arrange(desc(AcceptableMiles, RealGDP)) %&gt;% head(3) %&gt;% 
+    kbl(caption = &quot;**States with Highest Acceptable Miles in 2019**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-5">Table 5: </span><strong>States with Highest Acceptable Miles in 2019</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:left;">
+letterGrade
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Texas
+</td>
+<td style="text-align:left;">
+6
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+69296.62
+</td>
+<td style="text-align:left;">
+C
+</td>
+<td style="text-align:right;">
+1764357.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Georgia
+</td>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+29499.46
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+547422.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Minnesota
+</td>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+26337.43
+</td>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+341041.4
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>final_df %&gt;% group_by(State) %&gt;% filter(Year == 2019) %&gt;% select(1:4, 
+    7:8) %&gt;% arrange(AcceptableMiles, RealGDP) %&gt;% head(3) %&gt;% 
+    kbl(caption = &quot;**States with Lowest Acceptable Miles in 2019**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-5">Table 5: </span><strong>States with Lowest Acceptable Miles in 2019</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+State
+</th>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:left;">
+letterGrade
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+District of Columbia
+</td>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+31.37858
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:right;">
+123929.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rhode Island
+</td>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+849.19907
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:right;">
+53668.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Hawaii
+</td>
+<td style="text-align:left;">
+8
+</td>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+889.48000
+</td>
+<td style="text-align:left;">
+F
+</td>
+<td style="text-align:right;">
+82471.4
+</td>
+</tr>
+</tbody>
+</table>
+<p><font size="3.5">The data displayed above may indicate that there is a moderately strong relationship between how much money a state has and its acceptable road conditions.</font></p>
+<p><br></p>
+<pre class="r"><code># Mean Real GDP for each region (2011-2019) and the mean
+# acceptable miles (%)
+final_df %&gt;% group_by(Region) %&gt;% summarize(meanGDP = mean(RealGDP, 
+    na.rm = T), meanpctM = mean(AcceptablePercent, na.rm = T)) %&gt;% 
+    arrange(desc(meanGDP)) %&gt;% kbl(caption = &quot;**Mean GDP for Each Region in the U.S.**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-6">Table 6: </span><strong>Mean GDP for Each Region in the U.S.</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Region
+</th>
+<th style="text-align:right;">
+meanGDP
+</th>
+<th style="text-align:right;">
+meanpctM
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+8
+</td>
+<td style="text-align:right;">
+558101.8
+</td>
+<td style="text-align:right;">
+0.7423472
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+6
+</td>
+<td style="text-align:right;">
+531826.8
+</td>
+<td style="text-align:right;">
+0.7965897
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:right;">
+520362.3
+</td>
+<td style="text-align:right;">
+0.6043135
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:right;">
+472222.2
+</td>
+<td style="text-align:right;">
+0.8196310
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:right;">
+303902.9
+</td>
+<td style="text-align:right;">
+0.8467925
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:right;">
+159013.2
+</td>
+<td style="text-align:right;">
+0.8776040
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+154117.5
+</td>
+<td style="text-align:right;">
+0.6856085
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+7
+</td>
+<td style="text-align:right;">
+120013.3
+</td>
+<td style="text-align:right;">
+0.8745784
+</td>
+</tr>
+</tbody>
+</table>
+<p><font size="3.5">The region with the lowest mean Real GDP is region 8, of $558,101.8; also known as the Far West, this region has an average percentage of 74.23% acceptable miles. The region with the highest mean Real GDP is region 7, the Rocky Mountains, with an average percentage of 87.46% acceptable miles, it has a mean real GDP of $ 120,013.30.</font></p>
+<p><br>
+<strong>3. WRANGLING PT2: SUMMARY STATISTICS</strong></p>
+<pre class="r"><code># mean, median, sd, n, quantile, min, max
+
+final_df %&gt;% select(4:6, 8:11) %&gt;% summarize_all(mean, na.rm = T) %&gt;% 
+    kbl(caption = &quot;**Mean Values**&quot;) %&gt;% kable_styling(bootstrap_options = c(&quot;striped&quot;, 
+    &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 7: </span><strong>Mean Values</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+11484.96
+</td>
+<td style="text-align:right;">
+14389.93
+</td>
+<td style="text-align:right;">
+0.78759
+</td>
+<td style="text-align:right;">
+338115.7
+</td>
+<td style="text-align:right;">
+356419
+</td>
+<td style="text-align:right;">
+-1202.347
+</td>
+<td style="text-align:right;">
+0.1890752
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>final_df %&gt;% select(4:6, 8:11) %&gt;% summarize_all(median, na.rm = T) %&gt;% 
+    kbl(caption = &quot;**Median Values**&quot;) %&gt;% kable_styling(bootstrap_options = c(&quot;striped&quot;, 
+    &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 7: </span><strong>Median Values</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+10298
+</td>
+<td style="text-align:right;">
+12451
+</td>
+<td style="text-align:right;">
+0.8140805
+</td>
+<td style="text-align:right;">
+193204.7
+</td>
+<td style="text-align:right;">
+204454.7
+</td>
+<td style="text-align:right;">
+-833.6
+</td>
+<td style="text-align:right;">
+0.0162134
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>final_df %&gt;% select(4:6, 8:11) %&gt;% summarize_all(n_distinct, 
+    na.rm = T) %&gt;% kbl(caption = &quot;**Unique Values (n)**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 7: </span><strong>Unique Values (n)</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+455
+</td>
+<td style="text-align:right;">
+450
+</td>
+<td style="text-align:right;">
+458
+</td>
+<td style="text-align:right;">
+459
+</td>
+<td style="text-align:right;">
+459
+</td>
+<td style="text-align:right;">
+454
+</td>
+<td style="text-align:right;">
+458
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>final_df %&gt;% select(4:6, 8:11) %&gt;% summarize_all(quantile, na.rm = T) %&gt;% 
+    kbl(caption = &quot;**Quantiles (0%, 25%, 50%, 75%, 100%)**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 7: </span><strong>Quantiles (0%, 25%, 50%, 75%, 100%)</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0315315
+</td>
+<td style="text-align:right;">
+28367.9
+</td>
+<td style="text-align:right;">
+28134.60
+</td>
+<td style="text-align:right;">
+-9110.50
+</td>
+<td style="text-align:right;">
+-0.9294062
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4634.828
+</td>
+<td style="text-align:right;">
+6324.00
+</td>
+<td style="text-align:right;">
+0.7352503
+</td>
+<td style="text-align:right;">
+81621.7
+</td>
+<td style="text-align:right;">
+87639.45
+</td>
+<td style="text-align:right;">
+-1336.75
+</td>
+<td style="text-align:right;">
+0.0057819
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10298.000
+</td>
+<td style="text-align:right;">
+12451.00
+</td>
+<td style="text-align:right;">
+0.8140805
+</td>
+<td style="text-align:right;">
+193204.7
+</td>
+<td style="text-align:right;">
+204454.70
+</td>
+<td style="text-align:right;">
+-833.60
+</td>
+<td style="text-align:right;">
+0.0162134
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+16792.000
+</td>
+<td style="text-align:right;">
+20835.50
+</td>
+<td style="text-align:right;">
+0.8944389
+</td>
+<td style="text-align:right;">
+438981.5
+</td>
+<td style="text-align:right;">
+441234.85
+</td>
+<td style="text-align:right;">
+-376.30
+</td>
+<td style="text-align:right;">
+0.0295030
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+69296.615
+</td>
+<td style="text-align:right;">
+88738.07
+</td>
+<td style="text-align:right;">
+0.9954885
+</td>
+<td style="text-align:right;">
+2800505.4
+</td>
+<td style="text-align:right;">
+3132800.60
+</td>
+<td style="text-align:right;">
+-81.80
+</td>
+<td style="text-align:right;">
+16.8023706
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>final_df %&gt;% select(4:6, 8:11) %&gt;% summarize_all(min, na.rm = T) %&gt;% 
+    kbl(caption = &quot;**Minimum Values**&quot;) %&gt;% kable_styling(bootstrap_options = c(&quot;striped&quot;, 
+    &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 7: </span><strong>Minimum Values</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0315315
+</td>
+<td style="text-align:right;">
+28367.9
+</td>
+<td style="text-align:right;">
+28134.6
+</td>
+<td style="text-align:right;">
+-9110.5
+</td>
+<td style="text-align:right;">
+-0.9294062
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>final_df %&gt;% select(4:6, 8:11) %&gt;% summarize_all(max, na.rm = T) %&gt;% 
+    kbl(caption = &quot;**Maximum Values**&quot;) %&gt;% kable_styling(bootstrap_options = c(&quot;striped&quot;, 
+    &quot;hover&quot;, &quot;condensed&quot;, &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 7: </span><strong>Maximum Values</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+69296.62
+</td>
+<td style="text-align:right;">
+88738.07
+</td>
+<td style="text-align:right;">
+0.9954885
+</td>
+<td style="text-align:right;">
+2800505
+</td>
+<td style="text-align:right;">
+3132801
+</td>
+<td style="text-align:right;">
+-81.8
+</td>
+<td style="text-align:right;">
+16.80237
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># group_by() 1 variable median values for each year
+final_df %&gt;% group_by(Year) %&gt;% select(4:6, 8:11) %&gt;% summarize_all(median, 
+    na.rm = T) %&gt;% arrange(desc(Year)) %&gt;% kbl(caption = &quot;**Median Values for each year (2011-2019)**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = &quot;striped&quot;, full_width = F)</code></pre>
+<table class="table table-striped" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 7: </span><strong>Median Values for each year (2011-2019)</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:right;">
+11200.49
+</td>
+<td style="text-align:right;">
+13024.44
+</td>
+<td style="text-align:right;">
+0.8190058
+</td>
+<td style="text-align:right;">
+214933.7
+</td>
+<td style="text-align:right;">
+247543.8
+</td>
+<td style="text-align:right;">
+-1140.5
+</td>
+<td style="text-align:right;">
+0.0160876
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2018
+</td>
+<td style="text-align:right;">
+10308.00
+</td>
+<td style="text-align:right;">
+12764.00
+</td>
+<td style="text-align:right;">
+0.8128666
+</td>
+<td style="text-align:right;">
+209012.5
+</td>
+<td style="text-align:right;">
+235286.9
+</td>
+<td style="text-align:right;">
+-891.0
+</td>
+<td style="text-align:right;">
+0.0252173
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2017
+</td>
+<td style="text-align:right;">
+11055.00
+</td>
+<td style="text-align:right;">
+12667.00
+</td>
+<td style="text-align:right;">
+0.8155894
+</td>
+<td style="text-align:right;">
+202644.5
+</td>
+<td style="text-align:right;">
+223414.0
+</td>
+<td style="text-align:right;">
+-782.9
+</td>
+<td style="text-align:right;">
+0.0153420
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2016
+</td>
+<td style="text-align:right;">
+10064.00
+</td>
+<td style="text-align:right;">
+12571.00
+</td>
+<td style="text-align:right;">
+0.8171199
+</td>
+<td style="text-align:right;">
+196477.4
+</td>
+<td style="text-align:right;">
+213584.6
+</td>
+<td style="text-align:right;">
+-851.6
+</td>
+<td style="text-align:right;">
+0.0114175
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2015
+</td>
+<td style="text-align:right;">
+11276.00
+</td>
+<td style="text-align:right;">
+12647.00
+</td>
+<td style="text-align:right;">
+0.8345023
+</td>
+<td style="text-align:right;">
+191864.2
+</td>
+<td style="text-align:right;">
+202718.6
+</td>
+<td style="text-align:right;">
+-814.1
+</td>
+<td style="text-align:right;">
+0.0263427
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2014
+</td>
+<td style="text-align:right;">
+11353.00
+</td>
+<td style="text-align:right;">
+12664.00
+</td>
+<td style="text-align:right;">
+0.8148526
+</td>
+<td style="text-align:right;">
+186307.0
+</td>
+<td style="text-align:right;">
+193546.4
+</td>
+<td style="text-align:right;">
+-798.1
+</td>
+<td style="text-align:right;">
+0.0202864
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2013
+</td>
+<td style="text-align:right;">
+8384.00
+</td>
+<td style="text-align:right;">
+9853.00
+</td>
+<td style="text-align:right;">
+0.7938532
+</td>
+<td style="text-align:right;">
+179499.1
+</td>
+<td style="text-align:right;">
+182837.0
+</td>
+<td style="text-align:right;">
+-798.8
+</td>
+<td style="text-align:right;">
+0.0092313
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2012
+</td>
+<td style="text-align:right;">
+10369.00
+</td>
+<td style="text-align:right;">
+12050.00
+</td>
+<td style="text-align:right;">
+0.8064304
+</td>
+<td style="text-align:right;">
+176323.1
+</td>
+<td style="text-align:right;">
+176323.1
+</td>
+<td style="text-align:right;">
+-795.8
+</td>
+<td style="text-align:right;">
+0.0116124
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2011
+</td>
+<td style="text-align:right;">
+10171.00
+</td>
+<td style="text-align:right;">
+11320.00
+</td>
+<td style="text-align:right;">
+0.7984190
+</td>
+<td style="text-align:right;">
+174202.7
+</td>
+<td style="text-align:right;">
+170620.6
+</td>
+<td style="text-align:right;">
+-827.1
+</td>
+<td style="text-align:right;">
+-0.2537898
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># group_by() 2 variables median values for 2011 and 2019,
+# letters A and B
+final_df %&gt;% group_by(Year, letterGrade) %&gt;% filter((Year == 
+    2011 | Year == 2019) &amp; (letterGrade == &quot;A&quot; | letterGrade == 
+    &quot;B&quot;)) %&gt;% select(4:6, 8:11) %&gt;% summarize_all(median, na.rm = T) %&gt;% 
+    arrange(desc(Year)) %&gt;% kbl(caption = &quot;Median Values of States rated A and B in 2011 and 2019&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-7">Table 7: </span>Median Values of States rated A and B in 2011 and 2019
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:left;">
+letterGrade
+</th>
+<th style="text-align:right;">
+AcceptableMiles
+</th>
+<th style="text-align:right;">
+TotalMiles
+</th>
+<th style="text-align:right;">
+AcceptablePercent
+</th>
+<th style="text-align:right;">
+RealGDP
+</th>
+<th style="text-align:right;">
+NominalGDP
+</th>
+<th style="text-align:right;">
+Subsidies
+</th>
+<th style="text-align:right;">
+GDPpercentChange
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+6793.627
+</td>
+<td style="text-align:right;">
+7173.702
+</td>
+<td style="text-align:right;">
+0.9341532
+</td>
+<td style="text-align:right;">
+173515.4
+</td>
+<td style="text-align:right;">
+194658.1
+</td>
+<td style="text-align:right;">
+-939.60
+</td>
+<td style="text-align:right;">
+0.0157415
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2019
+</td>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+11848.888
+</td>
+<td style="text-align:right;">
+13598.657
+</td>
+<td style="text-align:right;">
+0.8574128
+</td>
+<td style="text-align:right;">
+180444.4
+</td>
+<td style="text-align:right;">
+203171.0
+</td>
+<td style="text-align:right;">
+-965.75
+</td>
+<td style="text-align:right;">
+0.0168551
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2011
+</td>
+<td style="text-align:left;">
+A
+</td>
+<td style="text-align:right;">
+10171.000
+</td>
+<td style="text-align:right;">
+10970.000
+</td>
+<td style="text-align:right;">
+0.9365276
+</td>
+<td style="text-align:right;">
+173881.1
+</td>
+<td style="text-align:right;">
+170004.7
+</td>
+<td style="text-align:right;">
+-683.70
+</td>
+<td style="text-align:right;">
+-0.0165036
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2011
+</td>
+<td style="text-align:left;">
+B
+</td>
+<td style="text-align:right;">
+14719.000
+</td>
+<td style="text-align:right;">
+17384.500
+</td>
+<td style="text-align:right;">
+0.8791105
+</td>
+<td style="text-align:right;">
+280414.2
+</td>
+<td style="text-align:right;">
+274859.2
+</td>
+<td style="text-align:right;">
+-1085.80
+</td>
+<td style="text-align:right;">
+-0.2044551
+</td>
+</tr>
+</tbody>
+</table>
+<p><font size="3.5">2019 had the highest acceptable miles, with a value of 69,296.2, and it had the highest values for both Real GDP ($2,800505) and Nominal GDP ($3,132,801). That being said, 2019 had one of the smallest GDP percent change (5.21%), whereas 2011 had the largest percent change, with a staggering value of 168.02%. It seems that the median acceptable miles for states that earned an A in 2011 decreased by 3,377.37 miles by 2019.</font></p>
+<p><br>
+<strong>4. VISUALIZATION: HEAT MAP</strong></p>
+<pre class="r"><code>library(reshape2)
+# correlation matrix
+cor_df &lt;- final_df[, c(4:6, 8:11)]
+round_cor_df &lt;- round(cor(cor_df, use = &quot;na.or.complete&quot;), 2)
+
+# upper triangle of matrix
+get_upper_tri &lt;- function(round_cor_df) {
+    round_cor_df[lower.tri(round_cor_df)] &lt;- NA
+    return(round_cor_df)
+}
+# pattern
+reorder_df &lt;- function(round_cor_df) {
+    dd &lt;- as.dist((1 - round_cor_df)/2)
+    hc &lt;- hclust(dd)
+    round_cor_df &lt;- round_cor_df[hc$order, hc$order]
+}
+cordf &lt;- reorder_df(round_cor_df)
+upper &lt;- get_upper_tri(cordf)
+# Melt correlation matrix
+melted_cordf &lt;- melt(upper, na.rm = TRUE)
+
+# Correlation Heat Map
+ggplot(melted_cordf, aes(Var2, Var1, fill = value)) + geom_tile(color = &quot;white&quot;) + 
+    scale_fill_gradient2(low = &quot;steelblue3&quot;, high = &quot;indianred3&quot;, 
+        mid = &quot;oldlace&quot;, midpoint = 0, limit = c(-1, 1), space = &quot;Lab&quot;, 
+        name = &quot;Correlation Heatmap&quot;) + theme_minimal() + theme(axis.text.x = element_text(angle = 50, 
+    vjust = 1, size = 10, hjust = 1)) + coord_fixed() + geom_text(aes(Var2, 
+    Var1, label = value), color = &quot;black&quot;, size = 3) + theme(axis.title.x = element_blank(), 
+    axis.title.y = element_blank(), panel.grid.major = element_blank(), 
+    panel.border = element_blank(), panel.background = element_blank(), 
+    axis.ticks = element_blank(), legend.justification = c(1, 
+        0), legend.position = c(0.65, 0.75), legend.direction = &quot;horizontal&quot;) + 
+    guides(fill = guide_colorbar(barwidth = 7.5, barheight = 1, 
+        title.position = &quot;top&quot;, title.hjust = 0.5))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><font size="3.5">This heat map displays the correlation between the 7 numeric variables in the final dataframe. The variables with the strongest positive correlation are [Acceptable Miles and Total Miles] where r=0.97 and [Nominal GDP and Total Miles] where r=0.65. It is an interesting conclusion that states with more miles of road tend to also have more affluence in spending. Both [Nominal and Real GDP] have strong negative correlation with [Subsidies], with r=-0.94. This makes sense due to the fact that states with a large GDP tend to not need financial assistance from the government.
+On the other hand, the weakest correlation between all of the variables is [Acceptable Percent and GDP percent change], where r=-0.02. This result could be due to the fact that the GDP percent change depended on the value of the previous year, whereas, as long as a state stayed consistent in maintaining road conditions, the percent of acceptable miles would barely differ.</font></p>
+<p><br>
+<strong>4. VISUALIZATION: GGPLOT 1</strong></p>
+<pre class="r"><code>ggplot(final_df, aes(x = RealGDP, y = AcceptableMiles, color = Region)) + 
+    geom_smooth(aes(fill = Region), alpha = 0.15) + scale_fill_brewer(palette = &quot;Paired&quot;) + 
+    geom_point(alpha = 0.125, size = 1.5) + stat_summary(fun.data = final_df, 
+    geom = &quot;point&quot;) + labs(x = &quot;GDP ($)&quot;, y = &quot;Acceptable Miles (mi)&quot;, 
+    title = &quot;Overall Acceptable Miles for Each Region as a Function of GDP&quot;) + 
+    scale_x_log10(labels = scales::number) + scale_y_log10(labels = scales::number) + 
+    scale_y_continuous(breaks = seq(-15000, 70000, 15000))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><font size="3.5">The above plot is a LOESS plot. In it, you can clearly see the relationship between acceptable miles and GDP for each region. Region 6, the Southwest, is the most notable of the regions within the graph, having peaks in both the $170,000 range and $1.5 million range for real GDP. For all regions, the amount of acceptable miles increases as real GDP increases. Region 1 has the highest amount of acceptable miles with the lowest GDP, in the $30,000 range, while region 6 has the highest acceptable miles at around $1.45 million GDP.</font></p>
+<p><br>
+<strong>4. VISUALIZATION: GGPLOT 2</strong></p>
+<pre class="r"><code>final_df %&gt;% ggplot(aes(x = Region, y = AcceptablePercent, fill = Region)) + 
+    geom_boxplot(alpha = 0.65) + scale_fill_brewer(palette = &quot;Paired&quot;) + 
+    geom_jitter(width = 0.1, alpha = 0.25) + xlab(&quot;Regions&quot;) + 
+    facet_wrap(~Year) + theme(axis.text.x = element_text(angle = 10, 
+    hjust = 1), axis.text.y = element_text(angle = 25, hjust = 1)) + 
+    labs(y = &quot;Acceptable Miles (%)&quot;, title = &quot;Acceptable Miles (%) of Each Region in the U.S. from 2011-2019&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-10-1.png" width="672" style="display: block; margin: auto;" />
+<font size="3.5">Above is a grouped boxplot presenting the percentage of acceptable miles of each region in the United States from 2011 to 2019. From a glance, it is clear that regions 1 and 2 had the most drastic outliers, pulling both of their distributions percentage of quality roads down and increasing their variability. On the upside, Region 4 tended to have the highest values within its distribution, consistently staying above the 80% mark.</font></p>
+<p><br>
+<strong>5. DIMENSIONALITY REDUCTION</strong></p>
+<pre class="r"><code># cluster data
+library(cluster)
+
+
+# summarize all to get rid of duplicate create an average of
+# all variables over the years of 2011-2019
+attempt &lt;- final_df %&gt;% group_by(State, Region) %&gt;% summarize_all(mean, 
+    na.rm = T) %&gt;% ungroup(State, Region) %&gt;% select(1:2, 4:5, 
+    8:10)
+# convert char variables to factor
+dat2 &lt;- attempt %&gt;% mutate_if(is.character, as.factor) %&gt;% column_to_rownames(&quot;State&quot;)
+
+# compute gower distances
+gower1 &lt;- daisy(dat2, metric = &quot;gower&quot;)
+
+# silhouette width biggest silhouette width = number of
+# clusters
+sil_width &lt;- vector()
+for (i in 2:7) {
+    pam_fit &lt;- pam(gower1, diss = TRUE, k = i)
+    sil_width[i] &lt;- pam_fit$silinfo$avg.width
+}
+ggplot() + geom_line(aes(x = 1:7, y = sil_width)) + scale_x_continuous(name = &quot;k&quot;, 
+    breaks = 1:7) + labs(title = &quot;Silhouette Width&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># run pam with k = 7
+pam3 &lt;- pam(gower1, k = 7, diss = T)
+
+# average silhouette width
+pam3$silinfo$avg.width</code></pre>
+<pre><code>## [1] 0.4135715</code></pre>
+<pre class="r"><code># interpret fit with silhouette plot avg sil width = 0.41 -&gt;&gt;
+# structure is weak and possibly artificial
+plot(pam3, which = 2)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-11-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># Which states are the most similar? most different?
+gower1 %&gt;% as.matrix %&gt;% as.data.frame %&gt;% rownames_to_column %&gt;% 
+    pivot_longer(-1, values_to = &quot;distance&quot;) %&gt;% filter(rowname != 
+    name) %&gt;% filter(distance %in% c(min(distance), max(distance))) %&gt;% 
+    distinct() %&gt;% kbl(caption = &quot;**Minimum and Maximum Distances**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-11">Table 8: </span><strong>Minimum and Maximum Distances</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+rowname
+</th>
+<th style="text-align:left;">
+name
+</th>
+<th style="text-align:right;">
+distance
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+California
+</td>
+<td style="text-align:left;">
+Rhode Island
+</td>
+<td style="text-align:right;">
+0.9488841
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+New Hampshire
+</td>
+<td style="text-align:left;">
+Vermont
+</td>
+<td style="text-align:right;">
+0.0088848
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rhode Island
+</td>
+<td style="text-align:left;">
+California
+</td>
+<td style="text-align:right;">
+0.9488841
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Vermont
+</td>
+<td style="text-align:left;">
+New Hampshire
+</td>
+<td style="text-align:right;">
+0.0088848
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code># proportion of Region per cluster
+dat2 %&gt;% mutate(cluster = factor(pam3$clustering)) %&gt;% select(cluster, 
+    Region) %&gt;% group_by(cluster, Region) %&gt;% summarize(n = n()) %&gt;% 
+    mutate(prop = n/sum(n, na.rm = T)) %&gt;% pivot_wider(-n, names_from = Region, 
+    values_from = prop) %&gt;% kbl(caption = &quot;**Proportion of Each Region per Cluster**&quot;) %&gt;% 
+    kable_styling(bootstrap_options = c(&quot;striped&quot;, &quot;hover&quot;, &quot;condensed&quot;, 
+        &quot;responsive&quot;))</code></pre>
+<table class="table table-striped table-hover table-condensed table-responsive" style="margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:unnamed-chunk-11">Table 8: </span><strong>Proportion of Each Region per Cluster</strong>
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+cluster
+</th>
+<th style="text-align:right;">
+5
+</th>
+<th style="text-align:right;">
+6
+</th>
+<th style="text-align:right;">
+2
+</th>
+<th style="text-align:right;">
+8
+</th>
+<th style="text-align:right;">
+4
+</th>
+<th style="text-align:right;">
+7
+</th>
+<th style="text-align:right;">
+1
+</th>
+<th style="text-align:right;">
+3
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:right;">
+0.9230769
+</td>
+<td style="text-align:right;">
+0.0769231
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.1666667
+</td>
+<td style="text-align:right;">
+0.8333333
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.2222222
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.7777778
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.3333333
+</td>
+<td style="text-align:right;">
+0.3333333
+</td>
+<td style="text-align:right;">
+0.3333333
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.1666667
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.8333333
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+6
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.2500000
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.75
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+7
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.1666667
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+0.8333333
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>library(GGally)
+# change column names to have spaces
+colnames(dat2) &lt;- make.names(c(&quot;Region&quot;, &quot;Acceptable Miles&quot;, 
+    &quot;Total Miles&quot;, &quot;Real GDP&quot;, &quot;Nominal GDP&quot;, &quot;Subsidies&quot;))
+
+# ggpairs plot / cluster assignment
+ggpairs(dat2, columns = 1:6, aes(color = as.factor(pam3$clustering)), 
+    upper = list(continuous = wrap(&quot;cor&quot;, size = 1.75)), columnLabels = gsub(&quot;.&quot;, 
+        &quot; &quot;, colnames(dat2), fixed = T), labeller = label_wrap_gen(10)) + 
+    theme_gray(base_size = 8.5) + theme(axis.text.x = element_text(angle = 90, 
+    hjust = 1, size = 8))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-11-3.png" width="672" style="display: block; margin: auto;" /></p>
+<p><font size="3.5">Since gower and pam do not work with duplicate values, the dataset was grouped by State and Region then averaged for all values. Variables Year, letterGrade, and GDP percentchange were all removed, retaining 2 categorical variables and 5 numeric. The categorical variables were then converted into factored values.
+To know how many clusters were needed, gower distances were computed and then a silhouette width vector was created. The plot shows that the ideal amount of clusters for this data is 7. With the amount of clusters determined, pam was computed. The average silhouette width was found to be 0.41, concluding that the structure of the relationship between the variables is barely acceptable, weak and possibly artificial.
+The states found to have the highest gower dissimilarity were California an Rhode Island. New Hampshire and Vermont were found to have the lowest Gower dissimilarity.
+92% of cluster 1 consisted of region 5. 83% of cluster 2 and 7 contained regions 8 and 3, respectively. Region 2 was the only region to be found in 5 clusters.
+A ggpairs plot was created to visualize the assignment of clusters among the variables. Region 1 can be seen having the lowest values for every numeric variable, including subsidies. Region 4 looks to have the greatest range with high variability for everything, narrowing only for total miles, which may mean that it contains some states with a large amount of roads. Total miles has the correlation of all of the variables with Acceptable miles (cor = 0.972). Subsidies has a relatively negative correlation with all of the variables overall, however in Acceptable Miles, it is neat to note that clusters 4, 5, and 6 all have a positive correlation with Subsidies, with 4 having the strongest positive value of cor = 0.655. </font></p>
+<p><br></p>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
